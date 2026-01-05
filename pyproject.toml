@@ -1,0 +1,15 @@
+[project]
+name = "Karsoogh-Backend"
+version = "0.1.0"
+description = "Backend for Karsoogh Site"
+authors = [
+    {name = "AliAlmasiZ", email = "ali1385almasi@gmail.com"},
+]
+dependencies = ["django>=6.0", "django-rest-framework>=0.1.0", "rest-framework-simplejwt>=0.0.2"]
+requires-python = "==3.13.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
