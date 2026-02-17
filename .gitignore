@@ -93,3 +93,8 @@ lerna-debug.log*
 
 **/migrations/*.py
 !**/migrations/__init__.py
+
+# local env files
+.env
+.env.*
+!.env.example
