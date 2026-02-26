@@ -26,21 +26,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#TEMP
-SECRET_KEY = 'django-insecure-abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
-#SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "your-default-secret-key")
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "your-default-secret-key")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
-#TEMP
-DEBUG=True
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
 
-# ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-]#TEMP
+
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
+
 
 ADMIN_URL = os.environ.get("DJANGO_ADMIN_URL", "admin/")
 
@@ -61,6 +56,7 @@ INSTALLED_APPS = [
 #Your Apps
 INSTALLED_APPS += [
     'accounts',
+    'exams'
 ]
 
 
@@ -99,18 +95,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.environ.get('DATABASE_URL', "sqlite:///db.sqlite3")
-#     )
-# }
-#TEMP
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', "sqlite:///db.sqlite3")
+    )
 }
+
 
 
 # Password validation
@@ -130,7 +120,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-AUTH_USER_MODEL = 'accounts.User'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
