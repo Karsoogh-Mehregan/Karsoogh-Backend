@@ -42,3 +42,25 @@ class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ['password']
+
+
+class MessageSerializer(serializers.Serializer):
+    message = serializers.CharField()
+
+
+class AuthLoginSerializer(serializers.Serializer):
+    national_code = serializers.CharField()
+    password = serializers.CharField()
+
+
+class TokenPairSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    refresh = serializers.CharField()
+
+
+class TokenRefreshSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+
+class AccessTokenSerializer(serializers.Serializer):
+    access = serializers.CharField()
