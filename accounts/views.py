@@ -6,7 +6,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from core.settings import ACCESS_TOKEN_LIFETIME_MINUTES, REFRESH_TOKEN_LIFETIME_DAYS
 from .models import Province, City, School
 from .serializers import (
     UserCreateSerializer,
@@ -180,10 +182,10 @@ class AuthViewSet(viewsets.ViewSet):
     )
     @action(detail=False,methods=['post'])
     def login(self, request):
-        national_code = request.data.get('national_code')
+        username = request.data.get('username')
         password = request.data.get('password')
 
-        if not national_code or not password:
+        if not username or not password:
             return Response(
                 {"message": "کد ملی و رمز عبور الزامی است"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -192,7 +194,7 @@ class AuthViewSet(viewsets.ViewSet):
 
         user = authenticate(
             request,
-            username=national_code,
+            username=username,
             password=password
         )
 
@@ -204,11 +206,32 @@ class AuthViewSet(viewsets.ViewSet):
         
         refresh = RefreshToken.for_user(user)
 
-        return Response({
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-        })
+        response = Response({
+            "message": "ورود با موفقیت انجام شد."
+        }, status=status.HTTP_200_OK)
         
+        response.set_cookie(
+            key='access_token',
+            value=str(refresh.access_token),
+            httponly=True,
+            secure=True,
+            samesite='Lax',
+            max_age=ACCESS_TOKEN_LIFETIME_MINUTES*60,
+            path="/"
+        )
+
+        response.set_cookie(
+            key='refresh_token',
+            value=str(refresh),
+            httponly=True,
+            secure=True,
+            samesite='Lax',
+            max_age=REFRESH_TOKEN_LIFETIME_DAYS*86400,
+            path="/"
+        )
+
+        return response
+
     @extend_schema(
         description="Refresh JWT access token using a refresh token.",
         request=TokenRefreshSerializer,
@@ -216,14 +239,41 @@ class AuthViewSet(viewsets.ViewSet):
     )
     @action(detail=False, methods=['post'])
     def refresh(self, request):
-        try:
-            refresh = RefreshToken(request.data.get('refresh'))
-            return Response({
-                "access": str(refresh.access_token)
-            })
-        except Exception:
+        refresh_token = request.COOKIES.get('refresh_token')
+
+        if not refresh_token:
             return Response(
-                {'message': 'توکن نامعتبر است.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {'message': 'توکن یافت نشد.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            response = Response(
+                {
+                    "message": "توکن تمدید شد."
+                }, status=status.HTTP_200_OK
+            )
+            response.set_cookie(
+                key='access_token',
+                value=str(refresh.access_token),
+                httponly=True,
+                secure=True,
+                samesite='Lax',
+                max_age=ACCESS_TOKEN_LIFETIME_MINUTES * 60,
+                path="/"
+            )
+            return response
+
+
+        except TokenError:
+            return Response(
+                {'message': 'توکن منقضی یا نامعتبر است.'},
+                status=status.HTTP_401_UNAUTHORIZED
                 )
         
+        except Exception:
+            return Response(
+                {'message': 'خطای سرور.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
