@@ -23,6 +23,9 @@ from .serializers import (
     AccessTokenSerializer,
 )
 from django.contrib.auth import get_user_model
+from rest_framework.views import exception_handler
+import json
+
 
 
 class ProvinceViewSet(viewsets.ViewSet):
@@ -172,10 +175,10 @@ class AuthViewSet(viewsets.ViewSet):
     permission_classes=[AllowAny]
 
     @extend_schema(
-        description="Log in with national code and password to obtain JWT tokens.",
+        description="Log in with username and password to obtain JWT tokens.",
         request=AuthLoginSerializer,
         responses={
-            200: TokenPairSerializer,
+            200: MessageSerializer,
             400: MessageSerializer,
             401: MessageSerializer,
         },
@@ -207,7 +210,8 @@ class AuthViewSet(viewsets.ViewSet):
         refresh = RefreshToken.for_user(user)
 
         response = Response({
-            "message": "ورود با موفقیت انجام شد."
+            "message": "ورود با موفقیت انجام شد.",
+            "user": UserDetailSerializer(user).data
         }, status=status.HTTP_200_OK)
         
         response.set_cookie(
@@ -235,7 +239,7 @@ class AuthViewSet(viewsets.ViewSet):
     @extend_schema(
         description="Refresh JWT access token using a refresh token.",
         request=TokenRefreshSerializer,
-        responses={200: AccessTokenSerializer, 400: MessageSerializer},
+        responses={200: MessageSerializer, 400: MessageSerializer},
     )
     @action(detail=False, methods=['post'])
     def refresh(self, request):
@@ -277,3 +281,10 @@ class AuthViewSet(viewsets.ViewSet):
                 {'message': 'خطای سرور.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def logout(self, request):
+        response = Response({'message': 'با موفقیت خارج شدید.'})
+        response.delete_cookie('refresh_token')
+        response.delete_cookie('access_token')
+        return response

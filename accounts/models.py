@@ -46,6 +46,5 @@ class User(AbstractUser):
     birth_date = models.DateField(null=True, blank=True)
     Academic_Year = models.IntegerField(choices=Academic_Year_Choose, default=7)
     school = models.ForeignKey(School, on_delete=models.CASCADE, null=True, blank=True)
-
-    USERNAME_FIELD = 'national_code'
-    REQUIRED_FIELDS = ['username']
+    # Todo: fix this after exam
+    email = models.EmailField(null=True) 

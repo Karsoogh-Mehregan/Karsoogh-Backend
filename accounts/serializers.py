@@ -41,7 +41,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        exclude = ['password']
+        fields = ['email', 'username', 'first_name', 'last_name', 'national_code', 'school', 'phone']
 
 
 class MessageSerializer(serializers.Serializer):
@@ -49,7 +49,7 @@ class MessageSerializer(serializers.Serializer):
 
 
 class AuthLoginSerializer(serializers.Serializer):
-    national_code = serializers.CharField()
+    username = serializers.CharField()
     password = serializers.CharField()
 
 
