@@ -1,10 +1,22 @@
-from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer, HyperlinkedIdentityField
+from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer, HyperlinkedIdentityField, SerializerMethodField
 from .models import ExamModel, QuestionModel
+from django.urls import reverse
 
 class QuestionSerializer(ModelSerializer):
+    question_picture = SerializerMethodField()
     class Meta:
         model=QuestionModel
         fields="__all__"
+
+    def get_question_picture(self, obj: QuestionModel):
+        request = self.context.get("request")
+
+        if not obj.question_picture:
+            return None
+        url = reverse("question-image-view", kwargs={"pk": obj.id})
+        if request:
+            return request.build_absolute_uri(url)
+        return url
         
 
 class ExamListSerializer(HyperlinkedModelSerializer):

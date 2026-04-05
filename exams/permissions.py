@@ -5,4 +5,8 @@ class CanDesigne(BasePermission):
         if request.method in SAFE_METHODS:
             return request.user.is_authenticated
         else:
-            return request.user.has_perm("exams.add_exammodl")
+            return request.user.has_perm("exams.add_exammodel")
+
+class CanViewQuestion(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm("exams.view_questionmodel") or request.user.is_superuser

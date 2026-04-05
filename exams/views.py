@@ -1,10 +1,17 @@
+from django.conf import settings
+from django.http import FileResponse, HttpResponse
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, OpenApiResponse
-from rest_framework import viewsets
+from rest_framework import viewsets, views, status
+from rest_framework.exceptions import NotFound
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+import core.settings
 from .serializers import ExamListSerializer, ExamDetailSerializer, QuestionSerializer
 from .models import ExamModel, QuestionModel
-from .permissions import CanDesigne
+from .permissions import CanDesigne, CanViewQuestion
+
 
 class ExamsViewSet(viewsets.ModelViewSet):
     lookup_field = "id"
@@ -112,3 +119,22 @@ class QuestionViewSet(viewsets.ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+
+class QuestionImageView(views.APIView):
+    permission_classes = [CanViewQuestion]
+
+    def get(self, request, pk):
+        question: QuestionModel = get_object_or_404(QuestionModel, pk=pk)
+
+        if not question.question_picture :
+            raise NotFound("No Image")
+
+        if core.settings.DEBUG :
+            return FileResponse(question.question_picture.open())
+
+
+        # TODO: test this later
+        response = HttpResponse()
+        response["X-Accel-Redirect"] = f"{question.question_picture}"
+        return response
