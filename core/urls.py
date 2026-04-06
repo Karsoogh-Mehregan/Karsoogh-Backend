@@ -18,5 +18,6 @@ urlpatterns = [
 
     path('auth/', include('accounts.urls')),
     path('exams/',include('exams.urls')),
+    path('challenges/', include('challenges.urls')),
     path(settings.ADMIN_URL, admin.site.urls),
 ]

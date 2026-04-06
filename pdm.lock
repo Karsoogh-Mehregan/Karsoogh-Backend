@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:3c6a469fd4e0764373ce796006bd8ddf0056286a9927617caf8e2c0e485a8edc"
+content_hash = "sha256:aa8e1ccd5e7db46bca68039e6bb2214684c17a5320e571d1fec82244dd0043b0"
 
 [[metadata.targets]]
 requires_python = "==3.13.*"
@@ -118,6 +118,21 @@ files = [
 ]
 
 [[package]]
+name = "django-ckeditor"
+version = "6.7.3"
+requires_python = ">=3.8"
+summary = "Django admin CKEditor integration."
+groups = ["default"]
+dependencies = [
+    "Django>=3.2",
+    "django-js-asset>=2.0",
+]
+files = [
+    {file = "django_ckeditor-6.7.3-py3-none-any.whl", hash = "sha256:09771c9b8fb33b84bd2767dfc891a24b7fbdb0120910a7ec65b763a4ae6807bb"},
+    {file = "django_ckeditor-6.7.3.tar.gz", hash = "sha256:889fd80ee7d368e3c5b828c8dabf8907d56bcad6bf5881f3898416df4f2adfe7"},
+]
+
+[[package]]
 name = "django-cors-headers"
 version = "4.9.0"
 requires_python = ">=3.9"
@@ -130,6 +145,20 @@ dependencies = [
 files = [
     {file = "django_cors_headers-4.9.0-py3-none-any.whl", hash = "sha256:15c7f20727f90044dcee2216a9fd7303741a864865f0c3657e28b7056f61b449"},
     {file = "django_cors_headers-4.9.0.tar.gz", hash = "sha256:fe5d7cb59fdc2c8c646ce84b727ac2bca8912a247e6e68e1fb507372178e59e8"},
+]
+
+[[package]]
+name = "django-js-asset"
+version = "3.1.2"
+requires_python = ">=3.10"
+summary = "script tag with additional attributes for django.forms.Media"
+groups = ["default"]
+dependencies = [
+    "django>=4.2",
+]
+files = [
+    {file = "django_js_asset-3.1.2-py3-none-any.whl", hash = "sha256:b5ffe376aebbd73b7af886d675ac9f43ca63b39540190fa8409c9f8e79145f68"},
+    {file = "django_js_asset-3.1.2.tar.gz", hash = "sha256:1fc7584199ed1941ed7c8e7b87ca5524bb0f2ba941561d2a104e88ee9f07bedd"},
 ]
 
 [[package]]
