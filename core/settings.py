@@ -9,13 +9,13 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+
 from datetime import timedelta
 from pathlib import Path
 import os
 import dj_database_url
 from django.conf.global_settings import MEDIA_URL, MEDIA_ROOT
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
@@ -41,72 +41,70 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
 ADMIN_URL = os.environ.get("DJANGO_ADMIN_URL", "admin/")
 
 
-
-
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     "rest_framework",
     "drf_spectacular",
     "corsheaders",
+    "ckeditor",
 ]
 
-#Your Apps
+# Your Apps
 INSTALLED_APPS += [
-    'accounts',
-    'exams',
-    'challenges'
+    "accounts", 
+    "exams",
+    "challenges"
 ]
 
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'core.urls'
-AUTH_USER_MODEL = 'accounts.User'
+ROOT_URLCONF = "core.urls"
+AUTH_USER_MODEL = "accounts.User"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = "core.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', "sqlite:///db.sqlite3")
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3")
     )
 }
-
 
 
 # Password validation
@@ -114,24 +112,24 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Tehran'
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "Asia/Tehran"
 USE_I18N = True
 USE_TZ = True
 
@@ -142,37 +140,43 @@ USE_TZ = True
 FORCE_SCRIPT_NAME = os.environ.get("DJANGO_FORCE_SCRIPT_NAME", None)
 
 # Use X-Forwarded-Host header
-USE_X_FORWARDED_HOST = os.environ.get("DJANGO_USE_X_FORWARDED_HOST", "False").lower() == "true"
-USE_X_FORWARDED_PORT = os.environ.get("DJANGO_USE_X_FORWARDED_PORT", "False").lower() == "true"
+USE_X_FORWARDED_HOST = (
+    os.environ.get("DJANGO_USE_X_FORWARDED_HOST", "False").lower() == "true"
+)
+USE_X_FORWARDED_PORT = (
+    os.environ.get("DJANGO_USE_X_FORWARDED_PORT", "False").lower() == "true"
+)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 STATIC_URL = FORCE_SCRIPT_NAME + "/static/" if FORCE_SCRIPT_NAME else "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_STATIC_PREFIX = STATIC_URL
-MEDIA_URL = FORCE_SCRIPT_NAME + "/media/" if FORCE_SCRIPT_NAME else  "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = FORCE_SCRIPT_NAME + "/media/" if FORCE_SCRIPT_NAME else "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Django-ratelimit settings
-RATELIMIT_CACHE = 'default'
+RATELIMIT_CACHE = "default"
 # set in nginx:
 # proxy_set_header X-Real-IP $remote_addr;
 RATELIMIT_IP_META_KEY = "HTTP_X_REAL_IP"
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = os.environ.get("DJANGO_CORS_ALLOW_ALL_ORIGINS", "False").lower() == "true"
+CORS_ALLOW_ALL_ORIGINS = (
+    os.environ.get("DJANGO_CORS_ALLOW_ALL_ORIGINS", "False").lower() == "true"
+)
 CORS_ALLOW_CREDENTIALS = True
 
 if not CORS_ALLOW_ALL_ORIGINS:
     CORS_ALLOWED_ORIGINS = [
-        origin.strip() 
-        for origin in os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS", "").split(",") 
+        origin.strip()
+        for origin in os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS", "").split(",")
         if origin.strip()
     ]
 
@@ -204,13 +208,20 @@ SPECTACULAR_SETTINGS = {
 ACCESS_TOKEN_LIFETIME_MINUTES = int(os.getenv("ACCESS_TOKEN_LIFETIME_MINUTES", "60"))
 REFRESH_TOKEN_LIFETIME_DAYS = int(os.getenv("REFRESH_TOKEN_LIFETIME_DAYS", "7"))
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(
-        minutes=ACCESS_TOKEN_LIFETIME_MINUTES
-    ),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=ACCESS_TOKEN_LIFETIME_MINUTES),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=REFRESH_TOKEN_LIFETIME_DAYS),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
+
+
+KAVENEGAR_API_KEY = os.environ.get("KAVENEGAR_API_KEY", "")
+KAVENEGAR_OTP_TEMPLATE_NAME = os.environ.get("KAVENEGAR_OTP_TEMPLATE_NAME", "")
+KAVENEGAR_TIMEOUT_SECONDS = int(os.environ.get("KAVENEGAR_TIMEOUT_SECONDS", "10"))
+OTP_CODE_DIGITS = int(os.environ.get("OTP_CODE_DIGITS", "6"))
+OTP_EXPIRY_MINUTES = int(os.environ.get("OTP_EXPIRY_MINUTES", "5"))
+OTP_RESEND_COOLDOWN_SECONDS = int(os.environ.get("OTP_RESEND_COOLDOWN_SECONDS", "60"))
+OTP_MAX_VERIFY_ATTEMPTS = int(os.environ.get("OTP_MAX_VERIFY_ATTEMPTS", "5"))
 
 
 # Email Configuration
@@ -230,7 +241,6 @@ else:
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@karsooghmehregan.ir")
 EMAIL_TIMEOUT = 30  # 30 seconds timeout
-
 
 
 # --- Security Settings ---
@@ -267,14 +277,23 @@ else:
     )
 
     # HTTPS Settings - ENABLED for production
-    SECURE_SSL_REDIRECT = os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "True").lower() == "true"
+    SECURE_SSL_REDIRECT = (
+        os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "True").lower() == "true"
+    )
     SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_SECURE_HSTS_SECONDS", 31536000))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = (
-        os.environ.get("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", "True").lower() == "true"
+        os.environ.get("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", "True").lower()
+        == "true"
     )
-    SECURE_HSTS_PRELOAD = os.environ.get("DJANGO_SECURE_HSTS_PRELOAD", "True").lower() == "true"
-    SESSION_COOKIE_SECURE = os.environ.get("DJANGO_SESSION_COOKIE_SECURE", "True").lower() == "true"
-    CSRF_COOKIE_SECURE = os.environ.get("DJANGO_CSRF_COOKIE_SECURE", "True").lower() == "true"
+    SECURE_HSTS_PRELOAD = (
+        os.environ.get("DJANGO_SECURE_HSTS_PRELOAD", "True").lower() == "true"
+    )
+    SESSION_COOKIE_SECURE = (
+        os.environ.get("DJANGO_SESSION_COOKIE_SECURE", "True").lower() == "true"
+    )
+    CSRF_COOKIE_SECURE = (
+        os.environ.get("DJANGO_CSRF_COOKIE_SECURE", "True").lower() == "true"
+    )
 
 # Logging Configuration
 # https://docs.djangoproject.com/en/5.1/topics/logging/
@@ -320,7 +339,10 @@ LOGGING = {
 }
 
 
-
-# --- S3 Settings --- 
-
-
+# --- S3 Settings ---
+S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME")
+S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY")
+S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY")
+S3_ENDPOINT = os.environ.get("S3_ENDPOINT")
+S3_PRESIGNED_EXPIRE = int(os.environ.get("S3_PRESIGNED_EXPIRE", 300))
+MAX_UPLOAD_SIZE_MB = int(os.environ.get("MAX_UPLOAD_SIZE_MB", 10))

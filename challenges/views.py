@@ -2,13 +2,14 @@ from django.utils import timezone
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import generics
+from rest_framework import status, generics
+from rest_framework.permissions import AllowAny
 from .models import WeeklyChallenge, ChallengeSubmission
 from .serializers import Challengeserializer, ChallengeSubmissionSerializer
 
 
 class ChallengeSubmissionView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, slug):
         try:
             challenge = WeeklyChallenge.objects.get(slug=slug)
@@ -30,12 +31,14 @@ class ChallengeSubmissionView(APIView):
 
 
 class ChallengeDetailView(generics.RetrieveAPIView):
+    permission_classes = [AllowAny]
     queryset = WeeklyChallenge.objects.all()
     serializer_class = Challengeserializer
     lookup_field = 'slug'
 
 
 class LatestChallengeView(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         try:
             now = timezone.now()
