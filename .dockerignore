@@ -1,0 +1,42 @@
+# Git and local tooling
+.git
+.gitignore
+.github
+.vscode
+.idea
+.cursor
+
+# Python / PDM
+.venv
+__pycache__
+*.py[cod]
+*$py.class
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.pdm-python
+pdm.toml
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+
+# Django runtime artifacts (rebuilt in the container)
+staticfiles/
+media/
+*.sqlite3
+*.db
+*.log
+logs/
+django.log
+
+# Tests and docs (not needed at runtime)
+tests/
+**/tests/
+*.md
+!README.md
+
+# OS junk
+.DS_Store
+Thumbs.db

@@ -1,47 +1,59 @@
-FROM python:3.12 AS builder
+# syntax=docker/dockerfile:1
+
+# --- Build dependencies into a project-local venv ---
+FROM python:3.13-slim AS builder
+
+ENV PDM_CHECK_UPDATE=false \
+    PDM_VENV_IN_PROJECT=true \
+    PDM_IGNORE_STORED_PYTHON=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN pip install pdm
+RUN pip install --no-cache-dir pdm
 
-# Copy the project definition and the lock file
-# This is done first to leverage Docker's layer caching
 COPY pyproject.toml pdm.lock ./
 
-# Install ONLY production dependencies using the lock file for a reproducible build
-# --prod flag ignores dev dependencies
-# --no-self ensures the project itself isn't installed in editable mode
-RUN pdm install --prod --no-self
+RUN pdm install --prod --no-editable
 
 
+# --- Production runtime ---
+FROM python:3.13-slim AS runtime
 
-FROM python:3.12-slim
-
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONFAULTHANDLER=1 \
+    PATH="/app/.venv/bin:$PATH" \
+    DJANGO_SETTINGS_MODULE=core.settings
 
 WORKDIR /app
 
-# Copy the entire virtual environment created by PDM from the builder stage
+# Pillow and other binary wheels need these at runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libjpeg62-turbo \
+        libpng16-16 \
+        zlib1g \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --gid 1000 appuser \
+    && useradd --uid 1000 --gid appuser --create-home --home-dir /home/appuser appuser
+
 COPY --from=builder /app/.venv /app/.venv
 
-# Copy the application source code
-COPY . .
-
-# Activate the virtual environment by adding it to the PATH
-ENV PATH="/app/.venv/bin:$PATH"
-
-# Create a non-root user for security
-RUN useradd --create-home appuser
-
-# Copy and set permissions for the entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh && chown -R appuser:appuser /app
+RUN chmod 755 /docker-entrypoint.sh
 
+COPY --chown=appuser:appuser . .
+
+RUN chown -R appuser:appuser /app
 
 USER appuser
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request; req = urllib.request.Request('http://localhost:8000/health/', headers={'X-Forwarded-Proto': 'https'}); urllib.request.urlopen(req, timeout=5).read()" || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/', timeout=5)"
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
