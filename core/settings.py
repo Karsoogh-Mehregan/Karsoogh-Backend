@@ -153,7 +153,7 @@ USE_X_FORWARDED_PORT = (
 STATIC_URL = FORCE_SCRIPT_NAME + "/static/" if FORCE_SCRIPT_NAME else "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-WHITENOISE_STATIC_PREFIX = STATIC_URL
+WHITENOISE_STATIC_PREFIX = "/static/"
 MEDIA_URL = FORCE_SCRIPT_NAME + "/media/" if FORCE_SCRIPT_NAME else "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
