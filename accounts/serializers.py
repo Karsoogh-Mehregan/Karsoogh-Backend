@@ -1,9 +1,24 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from .models import OtpRequest, Province, City, School, User
+from .models import OtpRequest, Province, City, School, User, DashboardResource
 from .otp_service import OtpVerificationError, verify_otp
 from .utils import normalize_phone, validate_national_code, validate_phone
+
+
+class DashboardResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DashboardResource
+        fields = [
+            "id",
+            "title",
+            "description",
+            "url",
+            "type",
+            "thumbnail",
+            "category",
+            "is_new",
+        ]
 
 
 class ProvinceSerializer(serializers.ModelSerializer):

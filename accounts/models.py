@@ -83,3 +83,35 @@ class OtpRequest(models.Model):
     def consume(self):
         self.consumed_at = timezone.now()
         self.save(update_fields=["consumed_at"])
+
+
+class DashboardResource(models.Model):
+    class ResourceType(models.TextChoices):
+        VIDEO_APARAT = "video_aparat", "Aparat Video"
+        VIDEO_YOUTUBE = "video_youtube", "Youtube Video"
+        VIDEO_DIRECT = "video_direct", "Direct Video"
+        LINK = "link", "Link"
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, default="")
+    url = models.URLField()
+    type = models.CharField(
+        max_length=20,
+        choices=ResourceType.choices,
+    )
+    thumbnail = models.URLField(blank=True, default="")
+    category = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="Category for the resource, use it for grouping the resources",
+    )
+    is_new = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["order", "-created_at"]
+
+    def __str__(self):
+        return self.title

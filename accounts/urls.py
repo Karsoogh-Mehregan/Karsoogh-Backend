@@ -1,5 +1,5 @@
 from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, AuthViewSet, ProvinceViewSet, CityViewSet, SchoolViewSet
+from .views import UserViewSet, AuthViewSet, ProvinceViewSet, CityViewSet, SchoolViewSet, DashboardResourceViewSet
 from django.urls import path
 
 router = DefaultRouter()
@@ -10,3 +10,7 @@ router.register(r'cities', CityViewSet, basename='cities')
 router.register(r'schools', SchoolViewSet, basename='schools')
 
 urlpatterns = router.urls
+
+urlpatterns += [
+    path('dashboard/resources/', DashboardResourceViewSet.as_view(), name='dashboard-resources'),
+]

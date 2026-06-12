@@ -1,3 +1,4 @@
+from rest_framework import generics
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -8,11 +9,12 @@ from core.settings import ACCESS_TOKEN_LIFETIME_MINUTES, REFRESH_TOKEN_LIFETIME_
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Province, City, School
+from .models import Province, City, School, DashboardResource
 from .otp_service import KavenegarSendError, OtpVerificationError, create_and_send_otp
 from .serializers import (
     AuthLoginSerializer,
     CitySerializer,
+    DashboardResourceSerializer,
     ForgotPasswordSerializer,
     MessageSerializer,
     OtpRequestSerializer,
@@ -382,3 +384,29 @@ class AuthViewSet(viewsets.ViewSet):
                 status=status.HTTP_200_OK,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@extend_schema(
+        description="List all dashboard resources, optionally filtered by category.",
+        parameters=[
+            OpenApiParameter(
+                name="category",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Filter resources by category name",
+                required=False,
+            )
+        ],
+        responses=DashboardResourceSerializer(many=True),
+    )
+class DashboardResourceViewSet(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = DashboardResourceSerializer
+    queryset = DashboardResource.objects.all()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        category = self.request.query_params.get("category")
+        if category:
+            queryset = queryset.filter(category=category)
+        return queryset
+
