@@ -10,7 +10,6 @@ class DashboardResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = DashboardResource
         fields = [
-            "id",
             "title",
             "description",
             "url",
@@ -113,6 +112,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "province",
             "phone",
         ]
+        readonly_fields = fields
 
 
 class MessageSerializer(serializers.Serializer):
