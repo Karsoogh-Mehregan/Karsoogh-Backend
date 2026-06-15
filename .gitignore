@@ -96,3 +96,6 @@ lerna-debug.log*
 !.env.example
 
 pdm.toml
+
+# loacl tests
+test_*

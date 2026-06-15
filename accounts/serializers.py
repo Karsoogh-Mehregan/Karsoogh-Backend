@@ -112,7 +112,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "province",
             "phone",
         ]
-        readonly_fields = fields
+        read_only_fields = fields
 
 
 class MessageSerializer(serializers.Serializer):
