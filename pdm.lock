@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:51eba0836f6fef7c2c3225259296bec90c1ee5b56e4097ec74dddb6b05fa2be7"
+content_hash = "sha256:af415938be069df4d6bb09e0ae9af72fbb23d59683e0f4416a057cd6444a7583"
 
 [[metadata.targets]]
 requires_python = "==3.13.*"
@@ -98,18 +98,18 @@ files = [
 ]
 
 [[package]]
-name = "django-ckeditor"
-version = "6.7.3"
+name = "django-ckeditor-5"
+version = "0.2.20"
 requires_python = ">=3.8"
-summary = "Django admin CKEditor integration."
+summary = "CKEditor 5 for Django."
 groups = ["default"]
 dependencies = [
-    "Django>=3.2",
-    "django-js-asset>=2.0",
+    "Django>=4.2",
+    "Pillow",
 ]
 files = [
-    {file = "django_ckeditor-6.7.3-py3-none-any.whl", hash = "sha256:09771c9b8fb33b84bd2767dfc891a24b7fbdb0120910a7ec65b763a4ae6807bb"},
-    {file = "django_ckeditor-6.7.3.tar.gz", hash = "sha256:889fd80ee7d368e3c5b828c8dabf8907d56bcad6bf5881f3898416df4f2adfe7"},
+    {file = "django_ckeditor_5-0.2.20-py3-none-any.whl", hash = "sha256:dfff659822fb8d42f55b43265cb51bf8b1e0797dc850e0bf5547644daeaa3fff"},
+    {file = "django_ckeditor_5-0.2.20.tar.gz", hash = "sha256:7c3d67cc8bbce3564108578b8fafe8e752c6ad4fbf45b1ffee821045ba2c0e96"},
 ]
 
 [[package]]
@@ -125,20 +125,6 @@ dependencies = [
 files = [
     {file = "django_cors_headers-4.9.0-py3-none-any.whl", hash = "sha256:15c7f20727f90044dcee2216a9fd7303741a864865f0c3657e28b7056f61b449"},
     {file = "django_cors_headers-4.9.0.tar.gz", hash = "sha256:fe5d7cb59fdc2c8c646ce84b727ac2bca8912a247e6e68e1fb507372178e59e8"},
-]
-
-[[package]]
-name = "django-js-asset"
-version = "3.1.2"
-requires_python = ">=3.10"
-summary = "script tag with additional attributes for django.forms.Media"
-groups = ["default"]
-dependencies = [
-    "django>=4.2",
-]
-files = [
-    {file = "django_js_asset-3.1.2-py3-none-any.whl", hash = "sha256:b5ffe376aebbd73b7af886d675ac9f43ca63b39540190fa8409c9f8e79145f68"},
-    {file = "django_js_asset-3.1.2.tar.gz", hash = "sha256:1fc7584199ed1941ed7c8e7b87ca5524bb0f2ba941561d2a104e88ee9f07bedd"},
 ]
 
 [[package]]

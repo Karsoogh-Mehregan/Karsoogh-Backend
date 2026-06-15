@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from ckeditor.fields import RichTextField
+from django_ckeditor_5.fields import CKEditor5Field
 from django.db.models import Q
 
 class ChallengeQuerySet(models.QuerySet):
@@ -24,7 +24,7 @@ class WeeklyChallenge(models.Model):
     validation_regex = models.CharField(max_length=255, blank=True, null=True)
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
-    description = RichTextField();
+    description = CKEditor5Field('Description', config_name='default')
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     is_active = models.CharField(max_length=10, choices=ActiveOptions.choices, default=ActiveOptions.AUTO)

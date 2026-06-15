@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "corsheaders",
-    "ckeditor",
+    "django_ckeditor_5",
 ]
 
 # Your Apps
