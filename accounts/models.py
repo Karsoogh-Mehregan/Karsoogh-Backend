@@ -43,8 +43,8 @@ class User(AbstractUser):
         (9, "نهم"),
     ]
 
-    national_code = models.CharField(max_length=10, unique=True)
-    phone = models.CharField(max_length=11, unique=True)
+    national_code = models.CharField(max_length=10, unique=True, null=True, blank=True)
+    phone = models.CharField(max_length=11, unique=True, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)
     Academic_Year = models.IntegerField(choices=Academic_Year_Choose, default=7)
     school = models.ForeignKey(School, on_delete=models.CASCADE, null=True, blank=True)

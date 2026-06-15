@@ -30,13 +30,13 @@ class ProvinceSerializer(serializers.ModelSerializer):
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
-        fields = ["id", "title", "province"]
+        fields = ["id", "title"]
 
 
 class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
-        fields = ["id", "title", "city"]
+        fields = ["id", "title"]
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -46,7 +46,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "id",
             "national_code",
             "phone",
             "birth_date",
@@ -97,7 +96,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-    school = SchoolSerializer()
+    school = SchoolSerializer(read_only=True)
+    city = CitySerializer(source="school.city", read_only=True)
+    province = ProvinceSerializer(source="school.city.province", read_only=True)
 
     class Meta:
         model = User
@@ -108,6 +109,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "last_name",
             "national_code",
             "school",
+            "city",
+            "province",
             "phone",
         ]
 

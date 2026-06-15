@@ -16,7 +16,7 @@ ACADEMIC_YEAR_MAP = {
 
 
 class Command(BaseCommand):
-    help = "Import users from a CSV file with columns: نام, نام خانوادگی, کد ملی, لیست استان و شهرستان, پایه تحصیلی, موبایل دانش‌آموز"
+    help = "Import users from a CSV file with columns: نام, نام خانوادگی, username, password, کد ملی (optional), لیست استان و شهرستان, پایه تحصیلی, موبایل (optional)"
 
     def add_arguments(self, parser):
         parser.add_argument("csv_file", type=str, help="Path to the CSV file")
@@ -49,15 +49,17 @@ class Command(BaseCommand):
         for i, raw_row in enumerate(reader, start=2):  # start=2 because row 1 is header
             # Strip whitespace from header keys to avoid mismatch
             row = {k.strip(): v for k, v in raw_row.items() if k}
-            first_name = row.get("نام", "").strip()
-            last_name = row.get("نام خانوادگی", "").strip()
-            national_code = row.get("کد ملی", "").strip()
-            location_raw = row.get("لیست استان و شهرستان", "").strip()
-            academic_year_raw = row.get("پایه تحصیلی", "").strip()
-            phone = row.get("موبایل", "").strip()
+            first_name = row.get("first_name", "").strip()
+            last_name = row.get("last_name", "").strip()
+            username = row.get("username", "").strip()
+            password = row.get("password", "").strip()
+            national_code = row.get("national_code", "").strip() or None
+            location_raw = row.get("location", "").strip()
+            academic_year_raw = row.get("academic_year", "").strip()
+            phone = row.get("phone", "").strip() or None
 
             # Skip empty rows
-            if not any([first_name, last_name, national_code, phone]):
+            if not any([first_name, last_name, username]):
                 self.stdout.write(
                     self.style.WARNING(f"Row {i}: Skipping empty row")
                 )
@@ -69,10 +71,10 @@ class Command(BaseCommand):
                 missing.append("نام")
             if not last_name:
                 missing.append("نام خانوادگی")
-            if not national_code:
-                missing.append("کد ملی")
-            if not phone:
-                missing.append("موبایل")
+            if not username:
+                missing.append("username")
+            if not password:
+                missing.append("password")
             if missing:
                 self.stdout.write(
                     self.style.ERROR(
@@ -99,6 +101,8 @@ class Command(BaseCommand):
                     "row_num": i,
                     "first_name": first_name,
                     "last_name": last_name,
+                    "username": username,
+                    "password": password,
                     "national_code": national_code,
                     "phone": phone,
                     "province_name": province_name,
@@ -119,8 +123,8 @@ class Command(BaseCommand):
             for r in rows:
                 self.stdout.write(
                     f"  Row {r['row_num']}: {r['first_name']} {r['last_name']} "
-                    f"({r['national_code']}) — {r['province_name']} / {r['city_name']} / {r['school_name']} "
-                    f"— Grade {r['academic_year']} — Phone: {r['phone']}"
+                    f"(user: {r['username']}) — {r['province_name']} / {r['city_name']} / {r['school_name']} "
+                    f"— Grade {r['academic_year']} — NC: {r['national_code'] or '-'} — Phone: {r['phone'] or '-'}"
                 )
             return
 
@@ -133,7 +137,16 @@ class Command(BaseCommand):
                 row_num = r["row_num"]
 
                 # Check for existing user
-                if User.objects.filter(national_code=r["national_code"]).exists():
+                if User.objects.filter(username=r["username"]).exists():
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Row {row_num}: User with username={r['username']} already exists — skipping"
+                        )
+                    )
+                    skipped_count += 1
+                    continue
+
+                if r["national_code"] and User.objects.filter(national_code=r["national_code"]).exists():
                     self.stdout.write(
                         self.style.WARNING(
                             f"Row {row_num}: User with national_code={r['national_code']} already exists — skipping"
@@ -142,7 +155,7 @@ class Command(BaseCommand):
                     skipped_count += 1
                     continue
 
-                if User.objects.filter(phone=r["phone"]).exists():
+                if r["phone"] and User.objects.filter(phone=r["phone"]).exists():
                     self.stdout.write(
                         self.style.WARNING(
                             f"Row {row_num}: User with phone={r['phone']} already exists — skipping"
@@ -173,11 +186,11 @@ class Command(BaseCommand):
                         error_count += 1
                         continue
 
-                password = default_password if default_password else r["national_code"]
+                password = default_password if default_password else r["password"]
 
                 try:
                     user = User.objects.create_user(
-                        username=r["national_code"],
+                        username=r["username"],
                         password=password,
                         first_name=r["first_name"],
                         last_name=r["last_name"],
@@ -189,7 +202,7 @@ class Command(BaseCommand):
                     created_count += 1
                     self.stdout.write(
                         self.style.SUCCESS(
-                            f"Row {row_num}: Created user {user.first_name} {user.last_name} ({user.national_code})"
+                            f"Row {row_num}: Created user {user.first_name} {user.last_name} (username: {user.username})"
                         )
                     )
                 except Exception as e:
