@@ -231,7 +231,7 @@ class AuthViewSet(viewsets.ViewSet):
 
         if not username or not password:
             return Response(
-                {"message": "کد ملی و رمز عبور الزامی است"},
+                {"message": "نام کاربری و رمز عبور الزامی است"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -239,7 +239,7 @@ class AuthViewSet(viewsets.ViewSet):
 
         if user is None:
             return Response(
-                {"message": "کد ملی یا رمز عبور اشتباه است!"},
+                {"message": "نام کاربری یا رمز عبور اشتباه است!"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
