@@ -347,3 +347,56 @@ S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY")
 S3_ENDPOINT = os.environ.get("S3_ENDPOINT")
 S3_PRESIGNED_EXPIRE = int(os.environ.get("S3_PRESIGNED_EXPIRE", 300))
 MAX_UPLOAD_SIZE_MB = int(os.environ.get("MAX_UPLOAD_SIZE_MB", 10))
+
+
+# --- CKEditor 5 Configuration ---
+CKEDITOR_5_CONFIGS = {
+    "default": {
+        "toolbar": [
+            "heading", "|", "bold", "italic", "link", "bulletedList", "numberedList",
+            "blockQuote", "imageUpload", "insertTable", "mediaEmbed", "undo", "redo", "sourceEditing"
+        ],
+        "htmlSupport": {
+            "allow": [
+                {
+                    "name": "/^.*$/",
+                    "attributes": True,
+                    "classes": True,
+                    "styles": True,
+                }
+            ],
+        },
+    },
+    "extends": {
+        "blockToolbar": [
+            "paragraph", "heading1", "heading2", "heading3",
+            "|", "bulletedList", "numberedList", "|", "blockQuote",
+        ],
+        "toolbar": [
+            "heading", "|", "outdent", "indent", "|", "bold", "italic", "link", "underline", "strikethrough",
+            "code", "subscript", "superscript", "highlight", "|", "bulletedList", "numberedList", "todoList",
+            "|", "blockQuote", "imageUpload", "insertTable", "mediaEmbed", "fontSize", "fontColor",
+            "fontBackgroundColor", "fontFamily", "removeFormat", "sourceEditing"
+        ],
+        "htmlSupport": {
+            "allow": [
+                {
+                    "name": "/^.*$/",
+                    "attributes": True,
+                    "classes": True,
+                    "styles": True,
+                }
+            ],
+        },
+        "image": {
+            "toolbar": ["imageTextAlternative", "|", "imageStyle:alignLeft", "imageStyle:alignRight", "imageStyle:side", "fullSize"],
+            "upload": {
+                "types": ["jpeg", "png", "gif", "bmp", "webp", "tiff"]
+            }
+        },
+        "table": {
+            "contentToolbar": ["tableColumn", "tableRow", "mergeTableCells", "tableProperties", "tableCellProperties"],
+        },
+    }
+}
+
