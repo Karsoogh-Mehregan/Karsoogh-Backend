@@ -6,13 +6,17 @@ import re
 
 class Challengeserializer(serializers.ModelSerializer):
     is_open = serializers.SerializerMethodField()
+    regex = serializers.SerializerMethodField()
 
     class Meta:
         model = WeeklyChallenge
-        fields = ['title', 'slug', 'description', 'is_open', 'start_date', 'end_date']
+        fields = ['title', 'slug', 'description', 'is_open', 'start_date', 'end_date', 'regex']
 
     def get_is_open(self, obj):
         return obj.is_open
+    
+    def get_regex(self, obj):
+        return obj.validation_regex
 
 
 class ChallengeSubmissionSerializer(serializers.ModelSerializer):
@@ -34,7 +38,11 @@ class ChallengeSubmissionSerializer(serializers.ModelSerializer):
             pattern = challenge.validation_regex
             answer = data.get('answer_text', '')
 
-            if not re.fullmatch(pattern, answer):
-                raise serializers.ValidationError("Answer does not match the required format.")
+            try:
+                if not re.fullmatch(pattern, answer):
+                    raise serializers.ValidationError({"answer_text": "Answer does not match the required format."})
+            except re.error:
+                # In case the regex in the database is invalid
+                pass
 
         return data

@@ -20,7 +20,7 @@ class ChallengeSubmissionView(APIView):
             if (not challenge.is_open):
                 return Response({"error": "این چالش فعال نیست"}, status=status.HTTP_403_FORBIDDEN)
 
-            serializer = ChallengeSubmissionSerializer(data=request.data)
+            serializer = ChallengeSubmissionSerializer(data=request.data, context={'challenge': challenge})
 
             if serializer.is_valid():
                 serializer.save(challenge=challenge)
@@ -68,7 +68,7 @@ class LatestChallengeView(APIView):
                 return Response({"error": "چالش فعالی وجود ندارد"}, status=status.HTTP_404_NOT_FOUND)
 
             return Response({"slug": challenge.slug, "title": challenge.title, "description": challenge.description,
-                             "regex": challenge.validation_regex})
+                             "regex": challenge.validation_regex, "is_open": challenge.is_open}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
