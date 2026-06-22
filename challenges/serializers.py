@@ -5,9 +5,14 @@ import re
 
 
 class Challengeserializer(serializers.ModelSerializer):
+    is_open = serializers.SerializerMethodField()
+
     class Meta:
         model = WeeklyChallenge
-        fields = ['title', 'slug', 'description', 'is_active', 'created_at']
+        fields = ['title', 'slug', 'description', 'is_open', 'start_date', 'end_date']
+
+    def get_is_open(self, obj):
+        return obj.is_open
 
 
 class ChallengeSubmissionSerializer(serializers.ModelSerializer):

@@ -28,6 +28,7 @@ class WeeklyChallenge(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     is_active = models.CharField(max_length=10, choices=ActiveOptions.choices, default=ActiveOptions.AUTO)
+    is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

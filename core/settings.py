@@ -281,6 +281,9 @@ else:
     SECURE_SSL_REDIRECT = (
         os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "True").lower() == "true"
     )
+    # Exempt the health check endpoint from SSL redirect so the Docker
+    # healthcheck (plain HTTP from inside the container) doesn't get 301'd
+    SECURE_REDIRECT_EXEMPT = [r"^health/$"]
     SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_SECURE_HSTS_SECONDS", 31536000))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = (
         os.environ.get("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", "True").lower()
