@@ -357,7 +357,7 @@ CKEDITOR_5_CONFIGS = {
     "default": {
         "toolbar": [
             "heading", "|", "bold", "italic", "link", "bulletedList", "numberedList",
-            "blockQuote", "imageUpload", "insertTable", "mediaEmbed", "undo", "redo", "sourceEditing"
+            "blockQuote", "imageInsert", "insertTable", "mediaEmbed", "undo", "redo", "sourceEditing"
         ],
         "htmlSupport": {
             "allow": [
@@ -378,7 +378,7 @@ CKEDITOR_5_CONFIGS = {
         "toolbar": [
             "heading", "|", "outdent", "indent", "|", "bold", "italic", "link", "underline", "strikethrough",
             "code", "subscript", "superscript", "highlight", "|", "bulletedList", "numberedList", "todoList",
-            "|", "blockQuote", "imageUpload", "insertTable", "mediaEmbed", "fontSize", "fontColor",
+            "|", "blockQuote", "imageInsert", "insertTable", "mediaEmbed", "fontSize", "fontColor",
             "fontBackgroundColor", "fontFamily", "removeFormat", "sourceEditing"
         ],
         "htmlSupport": {
