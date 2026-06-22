@@ -32,6 +32,7 @@ class WeeklyChallenge(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+
     objects = ChallengeQuerySet.as_manager()
     def __str__(self):
         return self.title
@@ -62,5 +63,7 @@ class ChallengeSubmission(models.Model):
     answer_text = models.TextField()
     submitted_at = models.DateTimeField(auto_now_add=True)
 
+    submitted_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, related_name='challenges_submitted', blank=True, null=True)
+    
     def __str__(self):
         return f"Submission by {self.firstname} {self.lastname} for {self.challenge.title}"

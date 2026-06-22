@@ -23,7 +23,10 @@ class ChallengeSubmissionView(APIView):
             serializer = ChallengeSubmissionSerializer(data=request.data, context={'challenge': challenge})
 
             if serializer.is_valid():
-                serializer.save(challenge=challenge)
+                if request.user.is_authenticated:
+                    serializer.save(challenge=challenge, submitted_by=request.user)
+                else:
+                    serializer.save(challenge=challenge)
                 return Response({"message": "Saved Successfully!"}, status=status.HTTP_201_CREATED)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
