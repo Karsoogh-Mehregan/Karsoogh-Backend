@@ -4,6 +4,7 @@ import re
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.contrib.auth.hashers import make_password
 
 from accounts.models import City, Province, School, User
 
@@ -128,90 +129,106 @@ class Command(BaseCommand):
                 )
             return
 
-        created_count = 0
+        # Pre-fetch existing unique fields into memory sets for O(1) lookups
+        existing_usernames = set(User.objects.values_list('username', flat=True))
+        existing_national_codes = set(
+            User.objects.exclude(national_code__isnull=True)
+            .exclude(national_code="")
+            .values_list('national_code', flat=True)
+        )
+        existing_phones = set(
+            User.objects.exclude(phone__isnull=True)
+            .exclude(phone="")
+            .values_list('phone', flat=True)
+        )
+
+        # Pre-fetch location models into memory to avoid per-row queries
+        provinces_cache = {p.title: p for p in Province.objects.all()}
+        cities_cache = {(c.title, c.province_id): c for c in City.objects.all()}
+        schools_cache = {(s.title, s.city_id): s for s in School.objects.all()}
+
+        users_to_create = []
         skipped_count = 0
         error_count = 0
 
+        self.stdout.write("Processing rows and preparing data for bulk insert...")
+        
         with transaction.atomic():
             for r in rows:
                 row_num = r["row_num"]
 
-                # Check for existing user
-                if User.objects.filter(username=r["username"]).exists():
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"Row {row_num}: User with username={r['username']} already exists — skipping"
-                        )
-                    )
+                # 1. Check for existing users in memory
+                if r["username"] in existing_usernames:
+                    self.stdout.write(self.style.WARNING(f"Row {row_num}: User with username={r['username']} already exists — skipping"))
                     skipped_count += 1
                     continue
 
-                if r["national_code"] and User.objects.filter(national_code=r["national_code"]).exists():
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"Row {row_num}: User with national_code={r['national_code']} already exists — skipping"
-                        )
-                    )
+                if r["national_code"] and r["national_code"] in existing_national_codes:
+                    self.stdout.write(self.style.WARNING(f"Row {row_num}: User with national_code={r['national_code']} already exists — skipping"))
                     skipped_count += 1
                     continue
 
-                if r["phone"] and User.objects.filter(phone=r["phone"]).exists():
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"Row {row_num}: User with phone={r['phone']} already exists — skipping"
-                        )
-                    )
+                if r["phone"] and r["phone"] in existing_phones:
+                    self.stdout.write(self.style.WARNING(f"Row {row_num}: User with phone={r['phone']} already exists — skipping"))
                     skipped_count += 1
                     continue
 
-                # Get or create Province, City, School
+                # 2. Resolve or create Province, City, School on the fly and update caches
                 school = None
                 if r["province_name"] and r["city_name"] and r["school_name"]:
                     try:
-                        province, _ = Province.objects.get_or_create(
-                            title=r["province_name"]
-                        )
-                        city, _ = City.objects.get_or_create(
-                            title=r["city_name"], defaults={"province": province}
-                        )
-                        school, _ = School.objects.get_or_create(
-                            title=r["school_name"], defaults={"city": city}
-                        )
+                        # Province
+                        province = provinces_cache.get(r["province_name"])
+                        if not province:
+                            province = Province.objects.create(title=r["province_name"])
+                            provinces_cache[r["province_name"]] = province
+                        
+                        # City
+                        city_key = (r["city_name"], province.id)
+                        city = cities_cache.get(city_key)
+                        if not city:
+                            city = City.objects.create(title=r["city_name"], province=province)
+                            cities_cache[city_key] = city
+                        
+                        # School
+                        school_key = (r["school_name"], city.id)
+                        school = schools_cache.get(school_key)
+                        if not school:
+                            school = School.objects.create(title=r["school_name"], city=city)
+                            schools_cache[school_key] = school
+                            
                     except Exception as e:
-                        self.stdout.write(
-                            self.style.ERROR(
-                                f"Row {row_num}: Error creating Province/City/School: {e}"
-                            )
-                        )
+                        self.stdout.write(self.style.ERROR(f"Row {row_num}: Error creating Province/City/School: {e}"))
                         error_count += 1
                         continue
 
-                password = default_password if default_password else r["password"]
+                # 3. Prepare User instance
+                raw_password = default_password if default_password else r["password"]
+                
+                user = User(
+                    username=r["username"],
+                    password=make_password(raw_password),
+                    first_name=r["first_name"],
+                    last_name=r["last_name"],
+                    national_code=r["national_code"],
+                    phone=r["phone"],
+                    Academic_Year=r["academic_year"],
+                    school=school,
+                )
+                users_to_create.append(user)
+                
+                # Add to existing sets so duplicates within the SAME CSV are skipped
+                existing_usernames.add(r["username"])
+                if r["national_code"]:
+                    existing_national_codes.add(r["national_code"])
+                if r["phone"]:
+                    existing_phones.add(r["phone"])
 
-                try:
-                    user = User.objects.create_user(
-                        username=r["username"],
-                        password=password,
-                        first_name=r["first_name"],
-                        last_name=r["last_name"],
-                        national_code=r["national_code"],
-                        phone=r["phone"],
-                        Academic_Year=r["academic_year"],
-                        school=school,
-                    )
-                    created_count += 1
-                    self.stdout.write(
-                        self.style.SUCCESS(
-                            f"Row {row_num}: Created user {user.first_name} {user.last_name} (username: {user.username})"
-                        )
-                    )
-                except Exception as e:
-                    self.stdout.write(
-                        self.style.ERROR(
-                            f"Row {row_num}: Error creating user: {e}"
-                        )
-                    )
-                    error_count += 1
+            # 4. Bulk Create Users
+            created_count = len(users_to_create)
+            if users_to_create:
+                self.stdout.write(f"Bulk inserting {created_count} users into the database...")
+                User.objects.bulk_create(users_to_create, batch_size=1000)
 
         self.stdout.write("")
         self.stdout.write(
