@@ -14,7 +14,6 @@ from datetime import timedelta
 from pathlib import Path
 import os
 import dj_database_url
-from django.conf.global_settings import MEDIA_URL, MEDIA_ROOT
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -54,6 +53,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "corsheaders",
     "django_ckeditor_5",
+    "storages",
 ]
 
 # Your Apps
@@ -152,10 +152,52 @@ USE_X_FORWARDED_PORT = (
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 STATIC_URL = FORCE_SCRIPT_NAME + "/static/" if FORCE_SCRIPT_NAME else "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_STATIC_PREFIX = "/static/"
 MEDIA_URL = FORCE_SCRIPT_NAME + "/media/" if FORCE_SCRIPT_NAME else "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+
+# --- S3 Settings ---
+# These are read regardless of DEBUG, but only used by the S3 storage backend
+# when DEBUG=False. Safe to leave empty in development.
+S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "")
+S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY", "")
+S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY", "")
+S3_ENDPOINT = os.environ.get("S3_ENDPOINT", "")
+S3_PRESIGNED_EXPIRE = int(os.environ.get("S3_PRESIGNED_EXPIRE", 300))
+MAX_UPLOAD_SIZE_MB = int(os.environ.get("MAX_UPLOAD_SIZE_MB", 10))
+
+
+# --- Storage Backends ---
+# Use S3/MinIO for media files in production, filesystem in development.
+if DEBUG:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "access_key": S3_ACCESS_KEY,
+                "secret_key": S3_SECRET_KEY,
+                "bucket_name": S3_BUCKET_NAME,
+                "endpoint_url": S3_ENDPOINT,
+                "file_overwrite": False,
+                "default_acl": None,
+                "querystring_auth": True,
+                "querystring_expire": S3_PRESIGNED_EXPIRE,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -341,15 +383,6 @@ LOGGING = {
         },
     },
 }
-
-
-# --- S3 Settings ---
-S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME")
-S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY")
-S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY")
-S3_ENDPOINT = os.environ.get("S3_ENDPOINT")
-S3_PRESIGNED_EXPIRE = int(os.environ.get("S3_PRESIGNED_EXPIRE", 300))
-MAX_UPLOAD_SIZE_MB = int(os.environ.get("MAX_UPLOAD_SIZE_MB", 10))
 
 
 # --- CKEditor 5 Configuration ---
