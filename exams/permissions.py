@@ -10,3 +10,13 @@ class CanDesigne(BasePermission):
 class CanViewQuestion(BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm("exams.view_questionmodel") or request.user.is_superuser
+
+
+class CanViewSubmission(BasePermission):
+    """Only the submission owner or staff can view it."""
+
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user or request.user.is_staff

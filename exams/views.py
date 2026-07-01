@@ -1,16 +1,15 @@
 from django.conf import settings
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from rest_framework import viewsets, views, status
 from rest_framework.exceptions import NotFound
-from rest_framework.decorators import action
 from rest_framework.response import Response
 
 import core.settings
 from .serializers import ExamListSerializer, ExamDetailSerializer, QuestionSerializer
-from .models import ExamModel, QuestionModel
-from .permissions import CanDesigne, CanViewQuestion
+from .models import ExamModel, QuestionModel, Submission
+from .permissions import CanDesigne, CanViewQuestion, CanViewSubmission
 
 
 class ExamsViewSet(viewsets.ModelViewSet):
@@ -138,3 +137,57 @@ class QuestionImageView(views.APIView):
         response = HttpResponse()
         response["X-Accel-Redirect"] = f"{question.question_picture}"
         return response
+
+
+class SubmissionFileView(views.APIView):
+    """
+    Return a presigned URL (S3/MinIO) or serve the file directly (dev)
+    for a given submission.
+    """
+
+    permission_classes = [CanViewSubmission]
+
+    @extend_schema(
+        summary="Get submission file URL",
+        description=(
+            "Returns a temporary presigned URL to download the submission file. "
+            "In development mode, serves the file directly."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="pk",
+                type=int,
+                location=OpenApiParameter.PATH,
+                description="Submission ID",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Presigned URL or file stream",
+            ),
+            403: OpenApiResponse(description="Not allowed to view this submission"),
+            404: OpenApiResponse(description="Submission not found or has no file"),
+        },
+    )
+    def get(self, request, pk):
+        submission = get_object_or_404(Submission, pk=pk)
+        self.check_object_permissions(request, submission)
+
+        if not submission.file:
+            raise NotFound("This submission has no file attached.")
+
+        storage = submission.file.storage
+        try:
+            url = storage.url(
+                submission.file.name,
+                expire=settings.S3_PRESIGNED_EXPIRE,
+            )
+        except TypeError:
+            # FileSystemStorage.url() doesn't accept expire
+            url = storage.url(submission.file.name)
+
+        # Make the url absolute if it is relative (For dev only)
+        if not url.startswith(("http://", "https://")):
+            url = request.build_absolute_uri(url)
+
+        return Response({"url": url}, status=status.HTTP_200_OK)
