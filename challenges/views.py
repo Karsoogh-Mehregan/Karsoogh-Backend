@@ -50,6 +50,8 @@ class ChallengeDetailView(generics.RetrieveAPIView):
 class ChallengeListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = Challengeserializer
+    pagination_class = None
+
 
     def get_queryset(self):
         if self.request.user.is_authenticated:

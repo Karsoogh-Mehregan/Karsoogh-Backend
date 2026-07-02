@@ -20,3 +20,10 @@ class CanViewSubmission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user or request.user.is_staff
+
+
+class CanGradeSubmission(BasePermission):
+    """Only staff/superuser or users with change_submission permission can grade."""
+
+    def has_permission(self, request, view):
+        return request.user and (request.user.is_staff or request.user.has_perm("exams.change_submission"))

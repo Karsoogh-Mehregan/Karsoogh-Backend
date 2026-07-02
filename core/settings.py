@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_ckeditor_5",
     "storages",
+    "django_filters",
 ]
 
 # Your Apps
@@ -238,6 +239,12 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {"anon": "300/day", "user": "1000/day"},
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 50,
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.OrderingFilter",
+    ],
 }
 
 SPECTACULAR_SETTINGS = {

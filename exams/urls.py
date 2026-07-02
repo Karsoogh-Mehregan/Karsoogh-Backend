@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 from django.urls import path
-from .views import ExamsViewSet, QuestionViewSet, QuestionImageView, SubmissionFileView
+from .views import ExamsViewSet, QuestionViewSet, QuestionImageView, SubmissionListView, SubmissionDetailView
 
 router=DefaultRouter()
 
@@ -11,5 +11,7 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path('questions/<int:pk>/image', QuestionImageView.as_view(), name='question-image-view'),
-    path('submissions/<int:pk>/file', SubmissionFileView.as_view(), name='submission-file-view'),
+    path('submissions/', SubmissionListView.as_view(), name='submission-list'),
+    path('submissions/<int:pk>/', SubmissionDetailView.as_view(), name='submission-detail'),
 ]
+

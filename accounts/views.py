@@ -402,6 +402,7 @@ class DashboardResourceViewSet(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = DashboardResourceSerializer
     queryset = DashboardResource.objects.all()
+    pagination_class = None
 
     def get_queryset(self):
         queryset = super().get_queryset()

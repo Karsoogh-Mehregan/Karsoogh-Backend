@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer, HyperlinkedIdentityField, SerializerMethodField
-from .models import ExamModel, QuestionModel
+from .models import ExamModel, QuestionModel, Submission
 from django.urls import reverse
 
 class QuestionSerializer(ModelSerializer):
@@ -32,3 +32,34 @@ class ExamDetailSerializer(ModelSerializer):
         model=ExamModel
         fields="__all__"
 
+
+class SubmissionSerializer(ModelSerializer):
+    exam_id = SerializerMethodField()
+    question_name = SerializerMethodField()
+    max_grade = SerializerMethodField()
+
+    class Meta:
+        model = Submission
+        fields = [
+            "id",
+            "user",
+            "question",
+            "question_name",
+            "exam_id",
+            "file",
+            "grade",
+            "max_grade",
+            "uploaded_at",
+        ]
+        read_only_fields = ["id", "uploaded_at"]
+
+
+
+    def get_exam_id(self, obj):
+        return obj.question.exam_id
+
+    def get_question_name(self, obj):
+        return obj.question.sign_name
+
+    def get_max_grade(self, obj):
+        return obj.question.max_grade
