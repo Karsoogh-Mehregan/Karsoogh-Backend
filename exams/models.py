@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-
+from accounts.models import User
 
 class QuestionModel(models.Model):
     sign_name=models.CharField(max_length=31, help_text="a name to know what this question is")
@@ -37,6 +37,9 @@ class Submission(models.Model):
         on_delete=models.CASCADE,
         related_name="submissions",
     )
+    grader=models.ForeignKey(User,on_delete=models.SET_NULL, 
+                             related_name="assigned_questions", blank=True,null=True,)
+                              
     file = models.FileField(upload_to=submission_upload_path)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     grade = models.PositiveIntegerField(null=True, blank=True)

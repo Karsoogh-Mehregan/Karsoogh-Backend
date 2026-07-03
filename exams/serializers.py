@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer, HyperlinkedIdentityField, SerializerMethodField
+from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer, HyperlinkedIdentityField, SerializerMethodField, ReadOnlyField
 from .models import ExamModel, QuestionModel, Submission
 from django.urls import reverse
 
@@ -34,9 +34,9 @@ class ExamDetailSerializer(ModelSerializer):
 
 
 class SubmissionSerializer(ModelSerializer):
-    exam_id = SerializerMethodField()
-    question_name = SerializerMethodField()
-    max_grade = SerializerMethodField()
+    exam_id = ReadOnlyField(source='question.exam_id')
+    question_name = ReadOnlyField(source='question.sign_name')
+    max_grade = ReadOnlyField(source='question.max_grade')
 
     class Meta:
         model = Submission
@@ -59,13 +59,3 @@ class SubmissionSerializer(ModelSerializer):
             "max_grade"
         ]
 
-
-
-    def get_exam_id(self, obj):
-        return obj.question.exam_id
-
-    def get_question_name(self, obj):
-        return obj.question.sign_name
-
-    def get_max_grade(self, obj):
-        return obj.question.max_grade

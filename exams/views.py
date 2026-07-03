@@ -11,8 +11,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .serializers import ExamListSerializer, ExamDetailSerializer, QuestionSerializer, SubmissionSerializer
 from .models import ExamModel, QuestionModel, Submission
-from .permissions import CanDesigne, CanViewQuestion, CanViewSubmission, CanGradeSubmission
+from .permissions import CanDesigne, CanViewQuestion, CanViewSubmission, CanGradeSubmission, IsAdminUser
 from .filters import SubmissionFilter
+from accounts.models import User
 
 
 @extend_schema_view(
@@ -357,10 +358,66 @@ class SubmissionListView(ListAPIView):
     ordering = ["-uploaded_at"]
 
     def get_queryset(self):
+        user = self.request.user
         qs = Submission.objects.select_related(
             "user", "question", "question__exam"
         )
-        if not self.request.user.is_staff:
-            qs = qs.filter(user=self.request.user)
-        return qs
+        
+        #admin can see all
+        if user.is_staff or user.is_superuser:
+            return qs
+            
+        #graders only see their assigned answers
+        if user.has_perm("exams.change_submission"):
+            return qs.filter(grader=user)
+            
+        #studentس only see their answer
+        return qs.filter(user=user)
 
+class AssignGraderView(views.APIView):
+    permission_classes = [IsAdminUser]
+    @extend_schema(
+        summary="Assign a grader to a submission",
+        description="Assigns a specific user as the grader for a given submission. Only accessible by superusers.",
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "grader_id": {"type": "integer", "description": "The ID of the user to assign as the grader"}
+                },
+                "required": ["grader_id"]
+            }
+        },
+        responses={
+            200: OpenApiResponse(
+                description="Grader assigned successfully",
+                examples=[
+                    OpenApiExample(
+                        "Success",
+                        value={"message": "Grader user_name assigned successfully."},
+                        response_only=True,
+                    )
+                ]
+            ),
+            400: OpenApiResponse(description="Missing grader_id or invalid data"),
+            403: OpenApiResponse(description="Permission denied"),
+            404: OpenApiResponse(description="Submission or User not found"),
+        },
+        examples=[
+            OpenApiExample(
+                "Successful assignment",
+                value={"grader_id": 5},
+                request_only=True,
+            ),
+        ],
+    )
+    def post(self, request, pk):
+        submission = get_object_or_404(Submission, pk=pk)
+        grader_id = request.data.get("grader_id")
+        
+        grader = get_object_or_404(User, pk=grader_id)
+        
+        submission.grader = grader
+        submission.save()
+        return Response({"message": f"Grader {grader.username} assigned successfully."})
+    

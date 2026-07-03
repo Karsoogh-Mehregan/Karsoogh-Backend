@@ -1,5 +1,4 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
-
+from rest_framework.permissions import BasePermission, SAFE_METHODS, IsAdminUser
 class CanDesigne(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
@@ -13,17 +12,37 @@ class CanViewQuestion(BasePermission):
 
 
 class CanViewSubmission(BasePermission):
-    """Only the submission owner or staff can view it."""
+    """Only the submission owner, assigned grader, or staff can view it."""
 
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated and (request.user.is_staff or request.user.has_perm("exams.view_submission"))
+        return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_staff or obj.user == request.user
+        #Admin/Staff
+        if request.user.is_staff or request.user.is_superuser:
+            return True
+            
+        #Owner (Student)
+        if obj.user == request.user:
+            return True
+            
+        #Assigned Grader
+        return obj.grader == request.user
 
 
 class CanGradeSubmission(BasePermission):
-    """Only staff/superuser or users with change_submission permission can grade."""
+    """Only staff/superuser or the assigned grader can grade."""
 
     def has_permission(self, request, view):
-        return request.user and (request.user.is_staff or request.user.has_perm("exams.change_submission"))
+        return bool(request.user and request.user.is_authenticated and (
+            request.user.is_staff or request.user.has_perm("exams.change_submission")
+        ))
+
+    def has_object_permission(self, request, view, obj):
+        # Admin/Staff
+        if request.user.is_staff or request.user.is_superuser:
+            return True
+            
+        # Assigned Grader
+        return obj.grader == request.user
+    
