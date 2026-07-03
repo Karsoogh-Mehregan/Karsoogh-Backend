@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.http import FileResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiParameter
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiExample, OpenApiParameter
 from rest_framework import viewsets, views, status
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
@@ -127,19 +127,27 @@ class SubmissionDetailView(views.APIView):
     @extend_schema(
         summary="Get submission details",
         description="Returns the details of the submission including the grade and the absolute file download URL.",
-        parameters=[
-            OpenApiParameter(
-                name="pk",
-                type=int,
-                location=OpenApiParameter.PATH,
-                description="Submission ID",
-            ),
-        ],
         responses={
             200: SubmissionSerializer,
             403: OpenApiResponse(description="Not allowed to view this submission"),
             404: OpenApiResponse(description="Submission not found"),
         },
+        examples=[
+            OpenApiExample(
+                "Successful response",
+                value={
+                    "id": 1,
+                    "user": 1,
+                    "question": 1,
+                    "question_name": "Question 1",
+                    "exam_id": 1,
+                    "file": "http://example.com/media/submissions/1/1/solution.pdf",
+                    "grade": 85,
+                    "max_grade": 100,
+                },
+                response_only=True,
+            ),
+        ],
     )
     def get(self, request, pk):
         submission = get_object_or_404(Submission, pk=pk)
@@ -166,6 +174,37 @@ class SubmissionDetailView(views.APIView):
             403: OpenApiResponse(description="Not allowed to grade this submission"),
             404: OpenApiResponse(description="Submission not found"),
         },
+        examples=[
+            OpenApiExample(
+                "Successful grading",
+                value={
+                    "id": 1,
+                    "user": 1,
+                    "question": 1,
+                    "question_name": "Question 1",
+                    "exam_id": 1,
+                    "file": "http://example.com/media/submissions/1/1/solution.pdf",
+                    "grade": 90,
+                    "max_grade": 100,
+                },
+                response_only=True,
+            ),
+            OpenApiExample(
+                "Invalid grade",
+                value={"error": "Grade must be between 0 and 100."},
+                response_only=True,
+            ),
+            OpenApiExample(
+                "Valid grade request",
+                value={"grade": 85},
+                request_only=True,
+            ),
+            OpenApiExample(
+                "Invalid grade request (out of range)",
+                value={"grade": 150},
+                request_only=True,
+            ),
+        ],
     )
     def post(self, request, pk):
         submission = get_object_or_404(Submission, pk=pk)
@@ -195,6 +234,113 @@ class SubmissionDetailView(views.APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@extend_schema(
+        summary="List submissions",
+        description="Returns a paginated list of submissions. Staff/superusers see all submissions, regular users only see their own.",
+        parameters=[
+            OpenApiParameter(
+                name="id",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Filter by submission ID",
+            ),
+            OpenApiParameter(
+                name="id__gte",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Filter by submission ID greater than or equal to",
+            ),
+            OpenApiParameter(
+                name="id__lte",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Filter by submission ID less than or equal to",
+            ),
+            OpenApiParameter(
+                name="question",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Filter by question ID",
+            ),
+            OpenApiParameter(
+                name="question_name",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Filter by question name (case-insensitive partial match)",
+            ),
+            OpenApiParameter(
+                name="exam",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Filter by exam ID",
+            ),
+            OpenApiParameter(
+                name="exam_name",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Filter by exam name (case-insensitive partial match)",
+            ),
+            OpenApiParameter(
+                name="user",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Filter by user ID",
+            ),
+            OpenApiParameter(
+                name="username",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Filter by username (case-insensitive partial match)",
+            ),
+            OpenApiParameter(
+                name="grade",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Filter by grade",
+            ),
+            OpenApiParameter(
+                name="grade__gte",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Filter by grade greater than or equal to",
+            ),
+            OpenApiParameter(
+                name="grade__lte",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description="Filter by grade less than or equal to",
+            ),
+            OpenApiParameter(
+                name="graded",
+                type=bool,
+                location=OpenApiParameter.QUERY,
+                description="Filter by whether submission has been graded (true) or not graded (false)",
+            ),
+            OpenApiParameter(
+                name="uploaded_after",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Filter by upload date after (ISO 8601 format)",
+            ),
+            OpenApiParameter(
+                name="uploaded_before",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Filter by upload date before (ISO 8601 format)",
+            ),
+            OpenApiParameter(
+                name="ordering",
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description="Order results by id, uploaded_at, or grade (prefix with '-' for descending)",
+            ),
+        ],
+        responses={
+            200: SubmissionSerializer(many=True),
+            403: OpenApiResponse(description="Not allowed to view submissions"),
+        },
+        
+    )
 class SubmissionListView(ListAPIView):
     """
     Paginated list of all submissions.

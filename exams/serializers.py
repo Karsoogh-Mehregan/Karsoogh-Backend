@@ -49,9 +49,15 @@ class SubmissionSerializer(ModelSerializer):
             "file",
             "grade",
             "max_grade",
-            "uploaded_at",
         ]
-        read_only_fields = ["id", "uploaded_at"]
+        read_only_fields = [
+            "id",
+            "user",
+            "question",
+            "question_name",
+            "file",
+            "max_grade"
+        ]
 
 
 
