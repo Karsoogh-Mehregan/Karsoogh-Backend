@@ -18,16 +18,20 @@ class CanViewSubmission(BasePermission):
         return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        #Admin/Staff
-        if request.user.is_staff or request.user.is_superuser:
+        #Admin
+        if request.user.is_superuser:
             return True
             
         #Owner (Student)
         if obj.user == request.user:
             return True
+        
+        # Staff with view permission
+        if request.user.is_staff and request.user.has_perm("exams.view_submission"):
+            return True
             
-        #Assigned Grader
-        return obj.grader == request.user
+        # Assigned Grader
+        return obj.graders.filter(pk=request.user.pk).exists()
 
 
 class CanGradeSubmission(BasePermission):
@@ -39,10 +43,14 @@ class CanGradeSubmission(BasePermission):
         ))
 
     def has_object_permission(self, request, view, obj):
-        # Admin/Staff
-        if request.user.is_staff or request.user.is_superuser:
+        # Admin
+        if request.user.is_superuser:
             return True
-            
+
+        # Staff with change permission
+        if request.user.is_staff and request.user.has_perm("exams.change_submission"):
+            return True
+        
         # Assigned Grader
-        return obj.grader == request.user
+        return obj.graders.filter(pk=request.user.pk).exists()
     

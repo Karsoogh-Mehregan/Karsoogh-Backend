@@ -37,11 +37,22 @@ class Submission(models.Model):
         on_delete=models.CASCADE,
         related_name="submissions",
     )
-    grader=models.ForeignKey(User,on_delete=models.SET_NULL, 
-                             related_name="assigned_questions", blank=True,null=True,)
+    graders=models.ManyToManyField(User,
+                             related_name="assigned_questions", blank=True,
+                             limit_choices_to={'is_staff': True})
+    
                               
     file = models.FileField(upload_to=submission_upload_path)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    graded_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name="graded_submissions",
+        null=True,
+        blank=True,
+    )
+    grader_description = models.TextField(blank=True, null=True)
     grade = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:

@@ -1,0 +1,46 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Assign or Remove Graders</h1>
+
+    <p>Select graders to assign or remove for the following <strong>{{ submissions|length }}</strong> submission(s):</p>
+
+    <ul>
+        {% for submission in submissions %}
+            <li>{{ submission }}</li>
+        {% endfor %}
+    </ul>
+
+    <hr>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for id in ids %}
+            <input type="hidden" name="{{ action_checkbox_name }}" value="{{ id }}">
+        {% endfor %}
+        <input type="hidden" name="action" value="assign_graders">
+
+        <fieldset style="border: 1px solid #ccc; padding: 12px; margin-bottom: 16px;">
+            <legend><strong>Available Staff / Graders</strong></legend>
+            {% for grader in available_graders %}
+                <div>
+                    <label>
+                        <input type="checkbox" name="graders" value="{{ grader.pk }}">
+                        {{ grader.get_full_name|default:grader.username }}
+                    </label>
+                </div>
+            {% empty %}
+                <p>No staff users available.</p>
+            {% endfor %}
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" name="apply_assign" value="Assign Graders" class="default" style="margin-right: 10px;">
+            <input type="submit" name="apply_remove" value="Remove Graders" class="button" style="background: #ba2121; color: white; margin-right: 10px;">
+            <a href="{% url 'admin:exams_submission_changelist' %}" class="button cancel-link">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
