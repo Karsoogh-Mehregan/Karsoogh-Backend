@@ -52,9 +52,11 @@ class Submission(models.Model):
         null=True,
         blank=True,
     )
+    graded_at = models.DateTimeField(null=True, blank=True)
     grader_description = models.TextField(blank=True, null=True)
     grade = models.PositiveIntegerField(null=True, blank=True)
-
+    description = models.TextField(blank=True, null=True)
+    
     class Meta:
         ordering = ["-uploaded_at"]
         unique_together = ("user", "question")

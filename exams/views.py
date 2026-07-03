@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.conf import settings
 from django.http import FileResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -164,7 +165,8 @@ class SubmissionDetailView(views.APIView):
             "application/json": {
                 "type": "object",
                 "properties": {
-                    "grade": {"type": "integer", "description": "The grade to assign"}
+                    "grade": {"type": "integer", "description": "The grade to assign"},
+                    "description": {"type": "string", "description": "Optional description or feedback from the grader"}
                 },
                 "required": ["grade"]
             }
@@ -197,7 +199,7 @@ class SubmissionDetailView(views.APIView):
             ),
             OpenApiExample(
                 "Valid grade request",
-                value={"grade": 85},
+                value={"grade": 85, "description": "wrong calculation in part 2"},
                 request_only=True,
             ),
             OpenApiExample(
@@ -207,11 +209,13 @@ class SubmissionDetailView(views.APIView):
             ),
         ],
     )
-    def post(self, request, pk):
+    def patch(self, request, pk):
         submission = get_object_or_404(Submission, pk=pk)
         self.check_object_permissions(request, submission)
 
         grade_value = request.data.get("grade")
+        description = request.data.get("description", "")
+
         if grade_value is None:
             return Response({"error": "Grade field is required."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -229,7 +233,10 @@ class SubmissionDetailView(views.APIView):
             )
 
         submission.grade = grade_value
-        submission.save(update_fields=["grade"])
+        submission.description = description
+        submission.graded_by = request.user
+        submission.graded_at = timezone.now()
+        submission.save(update_fields=["grade", "description", "graded_by", "graded_at"])
 
         serializer = SubmissionSerializer(submission, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)

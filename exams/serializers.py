@@ -48,6 +48,7 @@ class SubmissionSerializer(ModelSerializer):
             "exam_id",
             "file",
             "grade",
+            "description",
             "max_grade",
         ]
         read_only_fields = [
