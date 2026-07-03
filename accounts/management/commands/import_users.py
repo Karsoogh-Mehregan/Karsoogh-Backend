@@ -32,11 +32,17 @@ class Command(BaseCommand):
             default=None,
             help="Default password for all imported users. If not set, national_code is used.",
         )
+        parser.add_argument(
+            "--update",
+            action="store_true",
+            help="Update existing users instead of skipping them. Users are matched by username.",
+        )
 
     def handle(self, *args, **options):
         csv_path = options["csv_file"]
         dry_run = options["dry_run"]
         default_password = options["default_password"]
+        update_mode = options["update"]
 
         try:
             with open(csv_path, "r", encoding="utf-8-sig") as f:
@@ -74,7 +80,7 @@ class Command(BaseCommand):
                 missing.append("نام خانوادگی")
             if not username:
                 missing.append("username")
-            if not password:
+            if not password and not update_mode:
                 missing.append("password")
             if missing:
                 self.stdout.write(
@@ -142,26 +148,75 @@ class Command(BaseCommand):
             .values_list('phone', flat=True)
         )
 
+        # Pre-fetch users by username for update mode
+        users_by_username = {}
+        if update_mode:
+            usernames_in_csv = {r['username'] for r in rows}
+            users_by_username = {
+                u.username: u
+                for u in User.objects.filter(username__in=usernames_in_csv)
+            }
+
         # Pre-fetch location models into memory to avoid per-row queries
         provinces_cache = {p.title: p for p in Province.objects.all()}
         cities_cache = {(c.title, c.province_id): c for c in City.objects.all()}
         schools_cache = {(s.title, s.city_id): s for s in School.objects.all()}
 
         users_to_create = []
+        users_to_update = []
         skipped_count = 0
+        updated_count = 0
+        created_count = 0
         error_count = 0
 
-        self.stdout.write("Processing rows and preparing data for bulk insert...")
-        
+        mode_msg = "UPDATE mode" if update_mode else "INSERT mode"
+        self.stdout.write(f"Processing rows in {mode_msg}...")
+
         with transaction.atomic():
             for r in rows:
                 row_num = r["row_num"]
 
                 # 1. Check for existing users in memory
                 if r["username"] in existing_usernames:
-                    self.stdout.write(self.style.WARNING(f"Row {row_num}: User with username={r['username']} already exists — skipping"))
-                    skipped_count += 1
-                    continue
+                    if update_mode:
+                        # Update existing user
+                        user = users_by_username.get(r["username"])
+                        if user:
+                            # Update fields that exist in CSV
+                            user.first_name = r["first_name"]
+                            user.last_name = r["last_name"]
+                            user.national_code = r["national_code"]
+                            user.phone = r["phone"]
+                            user.Academic_Year = r["academic_year"]
+
+                            # Only update password if explicitly provided
+                            if r["password"]:
+                                user.password = make_password(r["password"])
+
+                            # Update school if provided
+                            try:
+                                school = self._resolve_school(
+                                    r["province_name"],
+                                    r["city_name"],
+                                    r["school_name"],
+                                    provinces_cache,
+                                    cities_cache,
+                                    schools_cache,
+                                )
+                            except Exception as e:
+                                self.stdout.write(self.style.ERROR(f"Row {row_num}: Error creating Province/City/School: {e}"))
+                                error_count += 1
+                                continue
+
+                            user.school = school
+                            users_to_update.append(user)
+                            updated_count += 1
+                            self.stdout.write(f"Row {row_num}: Updating user '{r['username']}'")
+                            continue
+                    else:
+                        self.stdout.write(self.style.WARNING(f"Row {row_num}: User with username={r['username']} already exists — skipping"))
+                        skipped_count += 1
+                        continue
 
                 if r["national_code"] and r["national_code"] in existing_national_codes:
                     self.stdout.write(self.style.WARNING(f"Row {row_num}: User with national_code={r['national_code']} already exists — skipping"))
@@ -174,36 +229,22 @@ class Command(BaseCommand):
                     continue
 
                 # 2. Resolve or create Province, City, School on the fly and update caches
-                school = None
-                if r["province_name"] and r["city_name"] and r["school_name"]:
-                    try:
-                        # Province
-                        province = provinces_cache.get(r["province_name"])
-                        if not province:
-                            province = Province.objects.create(title=r["province_name"])
-                            provinces_cache[r["province_name"]] = province
-                        
-                        # City
-                        city_key = (r["city_name"], province.id)
-                        city = cities_cache.get(city_key)
-                        if not city:
-                            city = City.objects.create(title=r["city_name"], province=province)
-                            cities_cache[city_key] = city
-                        
-                        # School
-                        school_key = (r["school_name"], city.id)
-                        school = schools_cache.get(school_key)
-                        if not school:
-                            school = School.objects.create(title=r["school_name"], city=city)
-                            schools_cache[school_key] = school
-                            
-                    except Exception as e:
-                        self.stdout.write(self.style.ERROR(f"Row {row_num}: Error creating Province/City/School: {e}"))
-                        error_count += 1
-                        continue
+                try:
+                    school = self._resolve_school(
+                        r["province_name"],
+                        r["city_name"],
+                        r["school_name"],
+                        provinces_cache,
+                        cities_cache,
+                        schools_cache,
+                    )
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"Row {row_num}: Error creating Province/City/School: {e}"))
+                    error_count += 1
+                    continue
 
                 # 3. Prepare User instance
-                raw_password = default_password if default_password else r["password"]
+                raw_password = default_password or r["password"] or username
                 
                 user = User(
                     username=r["username"],
@@ -230,10 +271,56 @@ class Command(BaseCommand):
                 self.stdout.write(f"Bulk inserting {created_count} users into the database...")
                 User.objects.bulk_create(users_to_create, batch_size=1000)
 
+            # 5. Bulk Update Users
+            if users_to_update:
+                self.stdout.write(f"Bulk updating {len(users_to_update)} users in the database...")
+                User.objects.bulk_update(
+                    users_to_update,
+                    ['first_name', 'last_name', 'national_code', 'phone', 'Academic_Year', 'school'],
+                    batch_size=1000
+                )
+
         self.stdout.write("")
-        self.stdout.write(
-            self.style.SUCCESS(f"Import complete: {created_count} created, {skipped_count} skipped, {error_count} errors")
-        )
+        result_msg = f"Import complete: {created_count} created"
+        if update_mode:
+            result_msg += f", {updated_count} updated"
+        result_msg += f", {skipped_count} skipped, {error_count} errors"
+        self.stdout.write(self.style.SUCCESS(result_msg))
+
+    def _resolve_school(
+        self,
+        province_name: str,
+        city_name: str,
+        school_name: str,
+        provinces_cache: dict,
+        cities_cache: dict,
+        schools_cache: dict,
+    ):
+        """
+        Resolve or create Province, City, School on the fly and update caches.
+        Returns the School instance or None.
+        """
+        if not (province_name and city_name and school_name):
+            return None
+
+        province = provinces_cache.get(province_name)
+        if not province:
+            province = Province.objects.create(title=province_name)
+            provinces_cache[province_name] = province
+
+        city_key = (city_name, province.id)
+        city = cities_cache.get(city_key)
+        if not city:
+            city = City.objects.create(title=city_name, province=province)
+            cities_cache[city_key] = city
+
+        school_key = (school_name, city.id)
+        school = schools_cache.get(school_key)
+        if not school:
+            school = School.objects.create(title=school_name, city=city)
+            schools_cache[school_key] = school
+
+        return school
 
     def _parse_location(self, location_raw: str) -> tuple[str, str, str]:
         """
