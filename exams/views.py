@@ -344,9 +344,10 @@ class SubmissionDetailView(views.APIView):
     )
 class SubmissionListView(ListAPIView):
     """
-    Paginated list of all submissions.
-    Only staff/superusers can access the full list.
-    Regular users only see their own submissions.
+    Paginated list of submissions.
+    Superusers and staff with view permission can see all submissions.
+    Staff only see submissions assigned to them as grader.
+    Students cannot access submissions.
     Supports filtering by id, question, exam, user, grade, graded status, and upload date.
     Supports ordering by id, uploaded_at, grade.
     """
@@ -363,16 +364,16 @@ class SubmissionListView(ListAPIView):
             "user", "question", "question__exam"
         )
         
-        #admin can see all
-        if user.is_staff or user.is_superuser:
+        # Superusers can see all
+        if user.is_superuser or (user.is_staff and user.has_perm("exams.view_submission")):
             return qs
             
-        #graders only see their assigned answers
-        if user.has_perm("exams.change_submission"):
-            return qs.filter(grader=user)
-            
-        #studentس only see their answer
-        return qs.filter(user=user)
+        # Staff only see submissions assigned to them as grader
+        if user.is_staff:
+            return qs.filter(graders=user).distinct()
+
+        # Regular users (students) cannot access the submissions list
+        return qs.none()
 
 class AssignGraderView(views.APIView):
     permission_classes = [IsAdminUser]
