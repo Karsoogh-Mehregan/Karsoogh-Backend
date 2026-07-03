@@ -111,6 +111,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "city",
             "province",
             "phone",
+            "is_staff",
         ]
         read_only_fields = fields
 
