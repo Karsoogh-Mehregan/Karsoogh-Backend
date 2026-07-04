@@ -164,7 +164,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "")
 S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY", "")
 S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY", "")
-S3_ENDPOINT = os.environ.get("S3_ENDPOINT", "")
+S3_ENDPOINT = os.environ.get("S3_ENDPOINT")
+if S3_ENDPOINT == "":
+    S3_ENDPOINT = None
 S3_PRESIGNED_EXPIRE = int(os.environ.get("S3_PRESIGNED_EXPIRE", 300))
 MAX_UPLOAD_SIZE_MB = int(os.environ.get("MAX_UPLOAD_SIZE_MB", 10))
 
