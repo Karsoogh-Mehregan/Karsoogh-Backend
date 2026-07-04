@@ -60,6 +60,7 @@ class Command(BaseCommand):
             last_name = row.get("last_name", "").strip()
             username = row.get("username", "").strip()
             password = row.get("password", "").strip()
+            email = row.get("email", "").strip()
             national_code = row.get("national_code", "").strip() or None
             location_raw = row.get("location", "").strip()
             academic_year_raw = row.get("academic_year", "").strip()
@@ -110,6 +111,7 @@ class Command(BaseCommand):
                     "last_name": last_name,
                     "username": username,
                     "password": password,
+                    "email": email,
                     "national_code": national_code,
                     "phone": phone,
                     "province_name": province_name,
@@ -185,6 +187,7 @@ class Command(BaseCommand):
                             # Update fields that exist in CSV
                             user.first_name = r["first_name"]
                             user.last_name = r["last_name"]
+                            user.email = r["email"]
                             user.national_code = r["national_code"]
                             user.phone = r["phone"]
                             user.Academic_Year = r["academic_year"]
@@ -249,6 +252,7 @@ class Command(BaseCommand):
                 user = User(
                     username=r["username"],
                     password=make_password(raw_password),
+                    email=r["email"],
                     first_name=r["first_name"],
                     last_name=r["last_name"],
                     national_code=r["national_code"],

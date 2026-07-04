@@ -21,6 +21,11 @@ class UserAdmin(BaseUserAdmin):
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
         ("Informations", {"fields": ("national_code", "phone", "birth_date", "Academic_Year", "school")}),
     )
+    actions = ["set_as_staff"]
+
+    @admin.action(description="Set selected users as staff")
+    def set_as_staff(self, request, queryset):
+        queryset.update(is_staff=True)
 
 
 
