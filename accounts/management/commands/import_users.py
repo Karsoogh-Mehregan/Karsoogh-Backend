@@ -341,11 +341,10 @@ class Command(BaseCommand):
         # parts[2] is gender (پسر/دختر) — not stored in User model
         school_name = parts[3].strip()  # "شهيد بهشتي"
 
-        # Extract province name after "استان"
-        province_name = ""
-        province_match = re.search(r"استان\s+(.+)", province_part)
-        if province_match:
-            province_name = province_match.group(1).strip()
+        # Extract province name
+        province_name = province_part.replace("اداره کل آموزش و پرورش", "").strip()
+        if province_name.startswith("استان "):
+            province_name = province_name[6:].strip()
 
         # Extract city name after "ناحیه" or "ناحيه"
         city_name = ""
