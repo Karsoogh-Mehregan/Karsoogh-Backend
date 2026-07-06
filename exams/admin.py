@@ -25,7 +25,7 @@ def export_submissions(modeladmin, request, queryset: list[Submission]):
     response.write(u'\ufeff'.encode('utf8'))
     writer = csv.writer(response)
 
-    writer.writerow(['Question' ,'ID', 'First Name', 'Last Name', 'Province', 'City', 'School', 'Grade'])
+    writer.writerow(['Question' ,'ID', 'First Name', 'Last Name', 'Province', 'City', 'School', 'Assigned Graders', 'Grade', 'Grader Description', 'Graded By', 'Graded At'])
 
 
     for submission in queryset:
@@ -42,7 +42,11 @@ def export_submissions(modeladmin, request, queryset: list[Submission]):
             province if province else '',
             city if city else '',
             school if school else '',
+            ', '.join([grader.get_full_name() or grader.username for grader in submission.graders.all()]),
             submission.grade,
+            submission.grader_description,
+            submission.graded_by.get_full_name() if submission.graded_by else '',
+            submission.graded_at,
         ])
 
     return response
@@ -89,7 +93,7 @@ assign_graders.short_description = "Assign or remove graders from selected submi
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "city_and_school", "question", "grade", "get_graders", "uploaded_at")
     list_filter = ("question__exam", "question", "uploaded_at")
-    search_fields = ("user__username", "user__phone", "question__sign_name")
+    search_fields = ("user__username", "user__phone", "question__sign_name", "graders__username", "graders__first_name", "graders__last_name")
     raw_id_fields = ("user", "question")
     list_editable = ("grade",)
 
@@ -98,7 +102,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         return qs.prefetch_related("graders")
     actions = [export_submissions, assign_graders]
 
-    readonly_fields = ("uploaded_at",)
+    readonly_fields = ("uploaded_at", "graded_at", "graded_by", "file", "user")
     filter_horizontal = ("graders",)
 
     fieldsets = (
@@ -106,7 +110,7 @@ class SubmissionAdmin(admin.ModelAdmin):
             "fields": ("user", "question", "file", "uploaded_at"),
         }),
         ("Grading Details", {
-            "fields": ("grade", "graded_by", "grader_description"),
+            "fields": ("grade", "graded_by", "grader_description", "graded_at"),
         }),
         ("Assigned Graders", {
             "fields": ("graders",),

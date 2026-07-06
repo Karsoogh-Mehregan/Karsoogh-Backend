@@ -230,6 +230,9 @@ if not CORS_ALLOW_ALL_ORIGINS:
     ]
 
 
+USER_DAILY_THROTTLE=os.environ.get("USER_DAILY_THROTTLE", 1000)
+ANON_DAILY_THROTTLE=os.environ.get("ANON_DAILY_THROTTLE", 300)
+
 # --- Django REST Framework Settings ---
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -243,7 +246,7 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {"anon": "300/day", "user": "1000/day"},
+    "DEFAULT_THROTTLE_RATES": {"anon": f"{ANON_DAILY_THROTTLE}/day", "user": f"{USER_DAILY_THROTTLE}/day"},
     "DEFAULT_PAGINATION_CLASS": "core.pagination.CustomPageNumberPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_FILTER_BACKENDS": [
