@@ -2,6 +2,8 @@ from django.utils import timezone
 from django.conf import settings
 from django.http import FileResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiExample, OpenApiParameter
 from rest_framework import viewsets, views, status
 from rest_framework.exceptions import NotFound
@@ -59,6 +61,14 @@ class ExamsViewSet(viewsets.ModelViewSet):
         if self.request.user.is_authenticated and self.request.user.has_perm("exams.add_exammodel"):
             return ExamModel.objects.all()
         return ExamModel.objects.filter(is_visible=True)
+
+    @method_decorator(cache_page(60 * 5))  # 5 minutes
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @method_decorator(cache_page(60 * 5))  # 5 minutes
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
 
 

@@ -12,7 +12,7 @@ admin.site.register(OtpRequest)
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ("username", "national_code", "phone", "Academic_Year", "school", "is_staff")
+    list_display = ("username", "first_name", "last_name", "national_code", "phone", "Academic_Year", "school", "is_staff")
     search_fields = ("username", "national_code", "phone", "first_name", "last_name")
     list_filter = ("Academic_Year", "school", "is_staff", "is_active")
     fieldsets = BaseUserAdmin.fieldsets + (

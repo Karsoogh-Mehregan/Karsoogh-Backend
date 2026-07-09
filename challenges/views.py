@@ -1,5 +1,7 @@
 from django.utils import timezone
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
@@ -36,6 +38,7 @@ class ChallengeSubmissionView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class ChallengeDetailView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]
     serializer_class = Challengeserializer
@@ -47,6 +50,7 @@ class ChallengeDetailView(generics.RetrieveAPIView):
         return WeeklyChallenge.objects.filter(is_public=True)
 
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class ChallengeListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = Challengeserializer
@@ -61,6 +65,8 @@ class ChallengeListView(generics.ListAPIView):
 
 class LatestChallengeView(APIView):
     permission_classes = [AllowAny]
+
+    @method_decorator(cache_page(60 * 5))
     def get(self, request):
         try:
 
