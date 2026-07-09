@@ -102,7 +102,13 @@ class SubmissionAdmin(admin.ModelAdmin):
         return qs.prefetch_related("graders")
     actions = [export_submissions, assign_graders]
 
-    readonly_fields = ("uploaded_at", "graded_at", "graded_by", "file", "user")
+    readonly_fields = ("uploaded_at", "graded_at", "graded_by")
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return self.readonly_fields + ("file", "user")
+        return self.readonly_fields
+
     filter_horizontal = ("graders",)
 
     fieldsets = (
