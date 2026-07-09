@@ -93,7 +93,17 @@ assign_graders.short_description = "Assign or remove graders from selected submi
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "city_and_school", "question", "grade", "get_graders", "uploaded_at")
     list_filter = ("question__exam", "question", "uploaded_at")
-    search_fields = ("user__username", "user__phone", "question__sign_name", "graders__username", "graders__first_name", "graders__last_name")
+    search_fields = (
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+        "user__national_code",
+        "user__phone",
+        "question__sign_name",
+        "graders__username",
+        "graders__first_name",
+        "graders__last_name"
+    )
     raw_id_fields = ("user", "question")
     list_editable = ("grade",)
 
