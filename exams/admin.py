@@ -25,7 +25,7 @@ def export_submissions(modeladmin, request, queryset: list[Submission]):
     response.write(u'\ufeff'.encode('utf8'))
     writer = csv.writer(response)
 
-    writer.writerow(['Question' ,'ID', 'First Name', 'Last Name', 'Province', 'City', 'School', 'Assigned Graders', 'Grade', 'Grader Description', 'Graded By', 'Graded At'])
+    writer.writerow(['Question' ,'ID', 'Username', 'Province', 'City', 'School', 'Assigned Graders', 'Grade', 'Grader Description', 'Graded By', 'Graded At'])
 
 
     for submission in queryset:
@@ -37,8 +37,7 @@ def export_submissions(modeladmin, request, queryset: list[Submission]):
         writer.writerow([
             submission.question.sign_name,
             submission.pk,
-            user.first_name,
-            user.last_name,
+            user.username,
             province if province else '',
             city if city else '',
             school if school else '',
