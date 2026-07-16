@@ -43,7 +43,7 @@ def export_submissions(modeladmin, request, queryset: list[Submission]):
             school if school else '',
             ', '.join([grader.get_full_name() or grader.username for grader in submission.graders.all()]),
             submission.grade,
-            submission.grader_description,
+            submission.description,
             submission.graded_by.get_full_name() if submission.graded_by else '',
             submission.graded_at,
         ])
@@ -125,7 +125,7 @@ class SubmissionAdmin(admin.ModelAdmin):
             "fields": ("user", "question", "file", "uploaded_at"),
         }),
         ("Grading Details", {
-            "fields": ("grade", "graded_by", "grader_description", "graded_at"),
+            "fields": ("grade", "graded_by", "description", "graded_at"),
         }),
         ("Assigned Graders", {
             "fields": ("graders",),
