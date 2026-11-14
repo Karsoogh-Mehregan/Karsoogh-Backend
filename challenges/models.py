@@ -57,13 +57,14 @@ class ChallengeSubmission(models.Model):
     firstname = models.CharField(max_length=255)
     lastname = models.CharField(max_length=255)
     phone = models.CharField(max_length= 15)
-    city = models.CharField(max_length=255)
     school = models.CharField(max_length=255)
     grade = models.CharField(max_length=2, choices=GradeOptions.choices)
+    postal_code = models.CharField(max_length=10, blank=False, default='')
+    address = models.TextField(blank=False, default='')
     answer_text = models.TextField()
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     submitted_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, related_name='challenges_submitted', blank=True, null=True)
-    
+
     def __str__(self):
         return f"Submission by {self.firstname} {self.lastname} for {self.challenge.title}"

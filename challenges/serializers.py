@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.utils.html import strip_tags
+from django.core.validators import RegexValidator
+
 from .models import WeeklyChallenge, ChallengeSubmission
 import re
 
@@ -14,7 +16,7 @@ class Challengeserializer(serializers.ModelSerializer):
 
     def get_is_open(self, obj):
         return obj.is_open
-    
+
     def get_regex(self, obj):
         return obj.validation_regex
 
@@ -22,10 +24,18 @@ class Challengeserializer(serializers.ModelSerializer):
 class ChallengeSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChallengeSubmission
-        fields = ['firstname', 'lastname', 'phone', 'city', 'school', 'grade', 'answer_text', 'submitted_at']
+        fields = ['firstname', 'lastname', 'phone', 'school',
+                  'postal_code', 'address', 'grade', 'answer_text', 'submitted_at']
+        extra_kwargs = {
+            'postal_code': {
+                'required': True, 'allow_blank': False,
+                'validators': [RegexValidator(r'^\d{10}$', 'کد پستی باید ۱۰ رقم باشد')],
+            },
+            'address': {'required': True, 'allow_blank': False},
+        }
 
     def validate(self, data):
-        text_fields = ['firstname', 'lastname', 'city', 'school', 'answer_text']
+        text_fields = ['firstname', 'lastname', 'school', 'address', 'answer_text']
 
         for field in text_fields:
             if field in data:

@@ -9,10 +9,10 @@ def export_submissions(modeladmin, request, queryset):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="submissions.csv"'
 
-    response.write(u'\ufeff'.encode('utf8'))
+    response.write(u'﻿'.encode('utf8'))
     writer = csv.writer(response)
 
-    writer.writerow(['Challenge', 'First Name', 'Last Name', 'Phone', 'City', 'School', 'Grade', 'Answer Text', 'Submitted At'])
+    writer.writerow(['Challenge', 'First Name', 'Last Name', 'Phone', 'School', 'Grade', 'Postal Code', 'Address', 'Answer Text', 'Submitted At'])
 
     for submission in queryset:
         writer.writerow([
@@ -20,9 +20,10 @@ def export_submissions(modeladmin, request, queryset):
             submission.firstname,
             submission.lastname,
             submission.phone,
-            submission.city,
             submission.school,
             submission.grade,
+            submission.postal_code,
+            submission.address,
             submission.answer_text,
             submission.submitted_at
         ])
@@ -41,7 +42,7 @@ class WeeklyChallengeAdmin(admin.ModelAdmin):
 
 @admin.register(ChallengeSubmission)
 class ChallengeSubmissionAdmin(admin.ModelAdmin):
-    list_display = ('challenge', 'firstname', 'lastname', 'phone', 'city', 'school', 'grade', 'submitted_at')
+    list_display = ('challenge', 'firstname', 'lastname', 'phone', 'school', 'grade', 'submitted_at')
     list_filter = ('submitted_at', 'challenge', 'grade')
-    search_fields = ('firstname', 'lastname', 'phone', 'answer_text', 'city', 'school', 'grade')
+    search_fields = ('firstname', 'lastname', 'phone', 'answer_text', 'school', 'postal_code', 'grade')
     actions = [export_submissions]
