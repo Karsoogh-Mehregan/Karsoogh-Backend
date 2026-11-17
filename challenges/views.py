@@ -34,8 +34,6 @@ class ChallengeSubmissionView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except WeeklyChallenge.DoesNotExist:
             return Response({"error": "Challenge not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @method_decorator(cache_page(60 * 5), name='dispatch')
@@ -76,7 +74,7 @@ class LatestChallengeView(APIView):
 
             challenge = queryset.order_by('-start_date').first()
             if not challenge:
-                return Response({"error": "چالش فعالی وجود ندارد"}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"error": "چالش فعالی وجود ندارد."}, status=status.HTTP_404_NOT_FOUND)
 
             return Response({"slug": challenge.slug, "title": challenge.title, "description": challenge.description,
                              "regex": challenge.validation_regex, "is_open": challenge.is_open}, status=status.HTTP_200_OK)

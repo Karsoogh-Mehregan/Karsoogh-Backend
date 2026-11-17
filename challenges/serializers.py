@@ -36,23 +36,18 @@ class ChallengeSubmissionSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         text_fields = ['firstname', 'lastname', 'school', 'address', 'answer_text']
-
         for field in text_fields:
             if field in data:
                 clean = strip_tags(data[field])
                 if clean != data[field]:
                     data[field] = clean
-
         challenge = self.context.get('challenge')
         if challenge and challenge.validation_regex:
             pattern = challenge.validation_regex
             answer = data.get('answer_text', '')
-
             try:
                 if not re.fullmatch(pattern, answer):
-                    raise serializers.ValidationError({"answer_text": "Answer does not match the required format."})
+                    raise serializers.ValidationError({"answer_text": "پاسخ نامعتبر است."})
             except re.error:
-                # In case the regex in the database is invalid
                 pass
-
         return data
